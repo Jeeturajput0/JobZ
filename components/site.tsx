@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Bookmark,
@@ -26,11 +27,15 @@ import {
 } from "lucide-react";
 import { useJobZ } from "./provider";
 import type { Job } from "@/data/jobs";
+import { AnimatedHeading } from "./animations/AnimatedHeading";
+import { quickSpring, reveal, stagger, subtleReveal } from "@/lib/motion";
+
+const MotionLink = motion.create(Link);
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="nav">
+    <motion.header className="nav motion-safe-enter" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
       <Link href="/" className="brand">
         <span className="brandmark">j</span>jobz
         <span className="branddot">.</span>
@@ -65,7 +70,7 @@ export function Navbar() {
       >
         {open ? <X /> : <Menu />}
       </button>
-    </header>
+    </motion.header>
   );
 }
 
@@ -90,7 +95,7 @@ export function Footer() {
           </div>
         </div>
         <div>
-          <b>For candidates</b>
+          <b className="text-lg font-bold">For candidates</b>
           <Link href="/jobs">Browse jobs</Link>
           <Link href="/companies">Explore companies</Link>
           <Link href="/register">Create profile</Link>
@@ -121,22 +126,22 @@ export function HomePage() {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="motion-safe-enter">
         <section className="hero">
           <div className="hero-content">
-            <div className="eyebrow">
+            <motion.div className="eyebrow" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.12 }}>
               <span className="eyebrow-dot" /> A better way to work
               <span className="eyebrow-line" /> Loved by 40,000+ professionals
-            </div>
-            <h1>
+            </motion.div>
+            <AnimatedHeading as="h1">
               Find work that
               <br />
               works <span className="serif-accent">for you.</span>
-            </h1>
-            <p className="hero-sub">
+            </AnimatedHeading>
+            <motion.p className="hero-sub motion-safe-enter" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}>
               Your next chapter starts here. Discover meaningful opportunities
               at companies that value what you bring.
-            </p>
+            </motion.p>
             <SearchBar />
             <div className="hero-foot">
               <div className="avatar-stack">
@@ -153,7 +158,7 @@ export function HomePage() {
               </span>
             </div>
           </div>
-          <div className="hero-art">
+          <motion.div className="hero-art motion-safe-enter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}>
             <div className="art-glow" />
             <div className="art-board">
               <div className="board-head">
@@ -228,24 +233,24 @@ export function HomePage() {
             </div>
             <div className="art-orbit orbit-one" />
             <div className="art-orbit orbit-two" />
-          </div>
+          </motion.div>
         </section>
         <section className="trust">
           <span>GOOD PEOPLE, GREAT TEAMS</span>
-          <div className="trust-logos">
-            <b>◈ linear</b>
-            <b>◉ notion</b>
-            <b>▲ Vercel</b>
-            <b>◧ Webflow</b>
-            <b>◉ stripe</b>
-            <b>✳ Figma</b>
-          </div>
+          <motion.div className="trust-logos motion-safe-enter" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, staggerChildren: 0.06 }}>
+            <motion.b className="motion-safe-enter" variants={subtleReveal}>◈ linear</motion.b>
+            <motion.b className="motion-safe-enter" variants={subtleReveal}>◉ notion</motion.b>
+            <motion.b className="motion-safe-enter" variants={subtleReveal}>▲ Vercel</motion.b>
+            <motion.b className="motion-safe-enter" variants={subtleReveal}>◧ Webflow</motion.b>
+            <motion.b className="motion-safe-enter" variants={subtleReveal}>◉ stripe</motion.b>
+            <motion.b className="motion-safe-enter" variants={subtleReveal}>✳ Figma</motion.b>
+          </motion.div>
         </section>
         <section className="section categories">
           <div className="section-heading">
             <div>
               <div className="kicker">A PLACE TO START</div>
-              <h2>What do you want to do?</h2>
+              <AnimatedHeading as="h2">What do you want to do?</AnimatedHeading>
               <p>
                 Explore roles in fields where your skills can make a difference.
               </p>
@@ -254,7 +259,7 @@ export function HomePage() {
               Explore all categories <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="category-grid">
+          <motion.div className="category-grid motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
             {[
               ["✳", "Design", "1,240 roles", "#f0edff"],
               ["⌘", "Engineering", "3,820 roles", "#eaf2ff"],
@@ -263,10 +268,11 @@ export function HomePage() {
               ["◎", "Customer success", "1,105 roles", "#fff0f5"],
               ["⌁", "Data & analytics", "640 roles", "#eff6ff"],
             ].map(([icon, title, count, bg]) => (
-              <Link
+              <MotionLink
                 href={"/jobs?category=" + encodeURIComponent(title)}
-                className="category-card"
+                className="category-card motion-safe-enter"
                 key={title}
+                variants={subtleReveal}
               >
                 <span className="category-icon" style={{ background: bg }}>
                   {icon}
@@ -274,35 +280,35 @@ export function HomePage() {
                 <strong>{title}</strong>
                 <small>{count}</small>
                 <ArrowRight size={16} className="category-arrow" />
-              </Link>
+              </MotionLink>
             ))}
-          </div>
+          </motion.div>
         </section>
         <section className="section featured">
           <div className="section-heading">
             <div>
               <div className="kicker">HAND-PICKED FOR YOU</div>
-              <h2>A few good opportunities.</h2>
+              <AnimatedHeading as="h2">A few good opportunities.</AnimatedHeading>
               <p>Thoughtful teams, meaningful work, room to grow.</p>
             </div>
             <Link className="text-link" href="/jobs">
               See all jobs <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="feature-grid">
+          <motion.div className="feature-grid motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
             {["j1", "j2", "j3"].map((id) => (
-              <JobCard key={id} id={id} />
+              <JobCard key={id} id={id} staggered />
             ))}
-          </div>
+          </motion.div>
         </section>
         <section className="why" id="about">
           <div className="why-left">
             <div className="kicker">WORK, WITH MORE MEANING</div>
-            <h2>
+            <AnimatedHeading as="h2">
               Not just your next job.
               <br />
               <span className="serif-accent">Your next chapter.</span>
-            </h2>
+            </AnimatedHeading>
             <p>
               We believe finding work should feel less like a search and more
               like finding your people. JobZ brings the right opportunities
@@ -312,8 +318,8 @@ export function HomePage() {
               Find your fit <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="why-points">
-            <div>
+          <motion.div className="why-points motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
+            <motion.div className="motion-safe-enter" variants={subtleReveal}>
               <span className="why-icon">✦</span>
               <div>
                 <b>Made for your whole story</b>
@@ -322,8 +328,8 @@ export function HomePage() {
                   you can go.
                 </p>
               </div>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div className="motion-safe-enter" variants={subtleReveal}>
               <span className="why-icon">◉</span>
               <div>
                 <b>Good people, good places</b>
@@ -332,8 +338,8 @@ export function HomePage() {
                   showing up for.
                 </p>
               </div>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div className="motion-safe-enter" variants={subtleReveal}>
               <span className="why-icon">↗</span>
               <div>
                 <b>More clarity, less noise</b>
@@ -342,19 +348,19 @@ export function HomePage() {
                   respects your time.
                 </p>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </section>
-        <section className="bottom-cta">
+        <motion.section className="bottom-cta motion-safe-enter" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.4 }}>
           <div>
             <div className="kicker">YOUR NEXT CHAPTER IS OUT THERE</div>
-            <h2>Ready for work that feels right?</h2>
+            <AnimatedHeading as="h2">Ready for work that feels right?</AnimatedHeading>
             <p>Join thousands finding a better fit with JobZ.</p>
           </div>
           <Link href="/register" className="btn btn-white">
             Create your free profile <ArrowRight size={16} />
           </Link>
-        </section>
+        </motion.section>
       </main>
       <Footer />
     </>
@@ -365,7 +371,7 @@ function SearchBar() {
   const [q, setQ] = useState(""),
     [loc, setLoc] = useState("");
   return (
-    <form className="searchbar" action="/jobs">
+    <motion.form className="searchbar motion-safe-enter" action="/jobs" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}>
       <div className="search-field">
         <Search size={18} />
         <input
@@ -388,29 +394,31 @@ function SearchBar() {
       <button className="btn btn-primary" type="submit">
         Find a job <ArrowRight size={16} />
       </button>
-    </form>
+    </motion.form>
   );
 }
 
-export function JobCard({ id, job: custom }: { id?: string; job?: Job }) {
+export function JobCard({ id, job: custom, staggered = false }: { id?: string; job?: Job; staggered?: boolean }) {
   const { jobs, saved, toggleSave } = useJobZ();
   const j = custom || jobs.find((x) => x.id === id) || jobs[0];
   return (
-    <article className="job-card">
+    <motion.article className="job-card motion-safe-enter" variants={subtleReveal} {...(!staggered && { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.18 } })} whileHover={{ y: -3 }}>
       <div className="job-card-top">
         <span className="company-logo" style={{ background: j.color }}>
           {j.logo}
         </span>
-        <button
+        <motion.button
           onClick={() => toggleSave(j.id)}
           className={"save-btn " + (saved.includes(j.id) ? "saved" : "")}
           aria-label="Save job"
+          whileTap={{ scale: 0.88 }}
+          transition={quickSpring}
         >
           <Bookmark
             size={17}
             fill={saved.includes(j.id) ? "currentColor" : "none"}
           />
-        </button>
+        </motion.button>
       </div>
       {j.featured && <span className="featured-tag">FEATURED</span>}
       <h3>{j.title}</h3>
@@ -430,7 +438,7 @@ export function JobCard({ id, job: custom }: { id?: string; job?: Job }) {
           View role <ArrowRight size={15} />
         </Link>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -443,6 +451,7 @@ export function JobsPage() {
     [type, setType] = useState("All types"),
     [mode, setMode] = useState("Any mode"),
     [sort, setSort] = useState("Recommended");
+  const animatedResultIds = useRef(new Set<string>());
   const filtered = jobs.filter(
     (j) =>
       (category === "All" ||
@@ -457,6 +466,9 @@ export function JobsPage() {
       (type === "All types" || j.type === type) &&
       (mode === "Any mode" || j.mode === mode),
   );
+  useEffect(() => {
+    filtered.forEach((job) => animatedResultIds.current.add(job.id));
+  }, [filtered]);
   return (
     <>
       <Navbar />
@@ -464,9 +476,9 @@ export function JobsPage() {
         <div className="jobs-head">
           <div>
             <div className="kicker">A BETTER FIT STARTS HERE</div>
-            <h1>
+            <AnimatedHeading as="h1">
               Find work that <span className="serif-accent">fits.</span>
-            </h1>
+            </AnimatedHeading>
             <p>Good opportunities, from teams you’ll be glad to join.</p>
           </div>
           <div className="jobs-count">
@@ -474,8 +486,11 @@ export function JobsPage() {
             <span>open roles</span>
           </div>
         </div>
-        <form
-          className="searchbar jobs-search"
+        <motion.form
+          className="searchbar jobs-search motion-safe-enter"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.08 }}
           onSubmit={(e) => e.preventDefault()}
         >
           <div className="search-field">
@@ -498,9 +513,9 @@ export function JobsPage() {
           <button className="btn btn-primary">
             <Search size={16} /> Search
           </button>
-        </form>
+        </motion.form>
         <div className="jobs-layout">
-          <aside className="filters">
+          <motion.aside className="filters motion-safe-enter" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, delay: 0.06 }}>
             <div className="filter-title">
               <b>
                 <Filter size={17} /> Filters
@@ -567,7 +582,7 @@ export function JobsPage() {
                 Create a profile to get roles picked for you.
               </span>
             </div>
-          </aside>
+          </motion.aside>
           <section className="job-results">
             <div className="results-top">
               <span>
@@ -584,8 +599,17 @@ export function JobsPage() {
             </div>
             {filtered.length ? (
               <div className="results-list">
-                {filtered.map((j) => (
-                  <article className="result-card" key={j.id}>
+                {filtered.map((j, index) => {
+                  const shouldAnimate = !animatedResultIds.current.has(j.id);
+                  animatedResultIds.current.add(j.id);
+                  return (
+                  <motion.article
+                    className="result-card motion-safe-enter"
+                    key={j.id}
+                    initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: shouldAnimate ? Math.min(index * 0.035, 0.14) : 0 }}
+                  >
                     <span
                       className="company-logo"
                       style={{ background: j.color }}
@@ -635,11 +659,12 @@ export function JobsPage() {
                         View role
                       </Link>
                     </div>
-                  </article>
-                ))}
+                  </motion.article>
+                  );
+                })}
               </div>
             ) : (
-              <div className="empty-state">
+              <motion.div className="empty-state motion-safe-enter" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
                 <Search size={28} />
                 <h3>No roles found yet</h3>
                 <p>Try adjusting your filters or broadening your search.</p>
@@ -655,7 +680,7 @@ export function JobsPage() {
                 >
                   Clear filters
                 </button>
-              </div>
+              </motion.div>
             )}
           </section>
         </div>
@@ -686,7 +711,7 @@ export function JobDetail({ id }: { id: string }) {
                 {job.logo}
               </span>
               <div>
-                <h1>{job.title}</h1>
+                <AnimatedHeading as="h1">{job.title}</AnimatedHeading>
                 <p>
                   {job.company} <span>·</span> {job.location}
                 </p>
@@ -816,9 +841,10 @@ export function JobDetail({ id }: { id: string }) {
           </aside>
         </div>
       </main>
+      <AnimatePresence>
       {modal && (
-        <div className="modal-backdrop" onClick={() => setModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <motion.div className="modal-backdrop motion-safe-enter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setModal(false)}>
+          <motion.div className="modal" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.99 }} transition={{ duration: 0.22 }} onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setModal(false)}>
               <X />
             </button>
@@ -846,9 +872,10 @@ export function JobDetail({ id }: { id: string }) {
               Your information stays private and is only shared with this
               employer.
             </small>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
       <Footer />
     </>
   );

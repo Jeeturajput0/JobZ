@@ -1,2 +1,4 @@
-import { ContactPage } from '@/components/portal';
-export default function Page(){return <ContactPage/>;}
+import { ContactPage } from "@/components/portal";
+export default function Page() {
+  return <ContactPage />;
+}

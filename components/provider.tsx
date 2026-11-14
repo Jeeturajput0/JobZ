@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { seedJobs, type Job } from "@/data/jobs";
 type AppItem = {
   id: string;
@@ -88,14 +89,18 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
     [jobs, saved, apps],
   );
   return (
+    <MotionConfig reducedMotion="user">
     <Context.Provider value={value}>
       {children}
+      <AnimatePresence>
       {notice && (
-        <div className="toast" role="status">
+        <motion.div className="toast motion-safe-enter" role="status" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}>
           ✓ &nbsp;{notice}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </Context.Provider>
+    </MotionConfig>
   );
 }
 export function useJobZ() {

@@ -1,0 +1,123 @@
+
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+
+import {connectDB} from "@/lib/mongodb";
+import User from "@/models/User";
+
+export async function POST(request: NextRequest) {
+  try {
+    // 1. Connect to MongoDB
+    await connectDB();
+
+    // 2. Get data from request body
+    const body = await request.json();
+
+    const { fullName, email, password, phone } = body;
+
+    // 3. Validate required fields
+    if (!fullName || !email || !password) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Full name, email and password are required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 4. Validate input types and basic formats
+    if (
+      typeof fullName !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      (phone !== undefined && typeof phone !== "string")
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid input data." },
+        { status: 400 }
+      );
+    }
+
+    const cleanName = fullName.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanName.length < 2 || cleanName.length > 80) {
+      return NextResponse.json(
+        { success: false, message: "Name must be 2 to 80 characters." },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return NextResponse.json(
+        { success: false, message: "Please enter a valid email address." },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8 || password.length > 72) {
+      return NextResponse.json(
+        { success: false, message: "Password must be 8 to 72 characters." },
+        { status: 400 }
+      );
+    }
+
+    // 5. Check if email already exists
+    const existingUser = await User.findOne({ email: cleanEmail });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, message: "Email is already registered." },
+        { status: 409 }
+      );
+    }
+
+    // 6. Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // 7. Create new user
+    const user = await User.create({
+      fullName: cleanName,
+      email: cleanEmail,
+      password: hashedPassword,
+      phone: phone?.trim() || "",
+      role: "jobSeeker",
+    });
+
+    // 8. Return safe response (never return password)
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Registration successful!",
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error: unknown) {
+    console.error("Registration error:", error);
+
+    // Handle duplicate email race condition
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === 11000
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Email is already registered." },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, message: "Something went wrong during registration." },
+      { status: 500 }
+    );
+  }
+}
