@@ -4,28 +4,317 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedHeading } from './animations/AnimatedHeading';
-import { CountUp } from './animations/CountUp';
+import { DashboardOverview } from './dashboard-overview';
 import { reveal, stagger, subtleReveal } from '@/lib/motion';
 import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Building2, Check, ChevronDown, CircleHelp, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, MapPin, MessageSquare, Plus, Search, Settings, Shield, Sparkles, Users, X } from 'lucide-react';
 import { useJobZ } from './provider';
 import { JobCard, Navbar, Footer } from './site';
 import type { Job } from '@/data/jobs';
+import { AdminJobsManager } from '@/components/admin-jobs';
 
 const links:Record<string,[string,string][]>={
  seeker:[['Overview','dashboard'],['Find jobs','find-jobs'],['My applications','applications'],['Saved jobs','saved-jobs'],['My profile','profile'],['Resume','resume'],['Notifications','notifications'],['Settings','settings']],
  employer:[['Overview','dashboard'],['Post a job','post-job'],['Manage jobs','manage-jobs'],['Applicants','applicants'],['Company profile','company-profile'],['Analytics','analytics'],['Notifications','notifications'],['Settings','settings']],
  admin:[['Overview','dashboard'],['Job seekers','job-seekers'],['Employers','employers'],['Manage jobs','jobs'],['Applications','applications'],['Categories','categories'],['Companies','companies'],['Featured jobs','featured-jobs'],['Reports & analytics','analytics'],['Settings','settings']]};
 const icons=[LayoutDashboard,Search,ClipboardList,BriefcaseBusiness,Users,FileText,Bell,Settings,Building2,Activity,Shield];
-export function AuthPage({kind}:{kind:string}){const [role,setRole]=useState('seeker');const [name,setName]=useState('Jordan Lee');const router=useRouter();const signup=kind==='register';return <main className="auth-page"><div className="auth-aside"><Link href="/" className="brand"><span className="brandmark">j</span>jobz<span className="branddot">.</span></Link><div><div className="kicker">YOUR NEXT CHAPTER STARTS HERE</div><AnimatedHeading as="h1">Good work<br/>finds <span className="serif-accent">good people.</span></AnimatedHeading><p>Find meaningful work, meet thoughtful teams, and make your next move with confidence.</p></div><div className="auth-proof"><span>★★★★★</span> Trusted by 40,000+ professionals</div></div><section className="auth-form-wrap"><div className="auth-form"><Link className="back-link" href="/">← Back to JobZ</Link><div className="kicker">{signup?'START SOMETHING GOOD':'WELCOME BACK'}</div><AnimatedHeading key={kind} as="h2">{signup?'Create your account':'Sign in to JobZ'}</AnimatedHeading><p>{signup?'A little closer to work that feels right.':'Pick up right where your next chapter begins.'}</p><label className="input-label">I’m here as</label><div className="role-picker">{[['seeker','Job seeker'],['employer','Employer'],['admin','Admin demo']].map(([r,t])=><button key={r} className={role===r?'selected':''} onClick={()=>setRole(r)}>{r==='seeker'?<Users size={18}/>:r==='employer'?<Building2 size={18}/>:<Shield size={18}/>}<span>{t}</span>{role===r&&<Check size={15}/>}</button>)}</div>{signup&&<label className="input-label">Full name<input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></label>}<label className="input-label">Email address<input className="input" type="email" placeholder="you@example.com" defaultValue="jordan@example.com"/></label><label className="input-label">Password<input className="input" type="password" placeholder="At least 8 characters" defaultValue="jobzdemo123"/></label>{signup&&<label className="input-label">Phone number<input className="input" type="tel" placeholder="(555) 000-0000"/></label>}{!signup&&<div className="form-inline"><label><input type="checkbox"/> Remember me</label><Link href="/forgot-password">Forgot password?</Link></div>}<button className="btn btn-primary btn-wide" onClick={()=>{localStorage.setItem('jobz_user',JSON.stringify({role,name}));router.push(`/${role === 'seeker' ? 'job-seeker' : role}/dashboard`)}}>{signup?'Create my account':'Continue to JobZ'} <ArrowRight size={16}/></button><div className="auth-or"><span/>or<span/></div><button className="btn btn-outline btn-wide demo-btn" onClick={()=>{localStorage.setItem('jobz_user',JSON.stringify({role,name:'Jordan Lee'}));router.push(`/${role === 'seeker' ? 'job-seeker' : role}/dashboard`)}}>Continue with demo profile</button><small className="auth-terms">By continuing, you agree to our <a>Terms of Service</a> and <a>Privacy Policy</a>.</small><p className="auth-switch">{signup?'Already have an account?':'New to JobZ?'} <Link href={signup?'/login':'/register'}>{signup?'Sign in':'Create an account'}</Link></p></div></section></main>}
+export function AuthPage({ kind }: { kind: string }) {
+  const [role, setRole] = useState<"jobSeeker" | "employer">("jobSeeker");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
+  const signup = kind === "register";
+  const adminLogin = kind === "admin-login";
+  const adminSignup = kind === "admin-register";
 
-export function DashboardPage({role,section}:{role:string;section:string}){const router=useRouter(),{jobs,saved,apps,addJob}=useJobZ();const [user,setUser]=useState<{role:string;name:string}|null>(null),[menu,setMenu]=useState(false),[search,setSearch]=useState(''),[title,setTitle]=useState(''),[company,setCompany]=useState('Acme Studio');const roleKey=role==='job-seeker'?'seeker':role;const items=links[roleKey]||links.seeker;const active=section||'dashboard';const pageTitle=items.find(x=>x[1]===active)?.[0]||'Overview';useEffect(()=>{try{const u=JSON.parse(localStorage.getItem('jobz_user')||'null');setUser(u);if(!u)router.replace('/login');else if(u.role!==roleKey)router.replace(`/${u.role}/dashboard`)}catch{router.replace('/login')}},[roleKey,router]);if(!user||user.role!==roleKey)return <div className="loading-screen"><span className="brandmark">j</span></div>;
-const postJob=()=>{if(!title.trim())return;const j:Job={id:'custom-'+Date.now(),title,company,logo:company.charAt(0).toUpperCase(),color:'#4c73e6',location:'Remote · US',salary:'$100k – $150k',type:'Full-time',mode:'Remote',category:'Product',posted:'Just now',description:'Join our team and make a meaningful impact.'};addJob(j);setTitle('');router.push('/employer/manage-jobs')};
-return <div className="dashboard-shell"><aside className={'dash-sidebar '+(menu?'show':'')}><Link className="brand dash-brand" href="/"><span className="brandmark">j</span>jobz<span className="branddot">.</span></Link><div className="workspace-switch"><span className="workspace-mark">{roleKey==='employer'?'A':roleKey==='admin'?'J':'J'}</span><span><b>{roleKey==='employer'?'Acme Studio':roleKey==='admin'?'JobZ Admin':'Jordan Lee'}</b><small>{roleKey==='employer'?'Hiring workspace':roleKey==='admin'?'Admin workspace':'Personal workspace'}</small></span><ChevronDown size={15}/></div><small className="side-label">WORKSPACE</small><nav className="side-nav">{items.map(([label,path],i)=>{const Icon=icons[Math.min(i,icons.length-1)];return <Link key={path} href={`/${role}/${path}`} className={active===path?'active':''}><Icon size={17}/>{label}{label==='Notifications'&&<span className="side-badge">3</span>}</Link>})}</nav><div className="side-spacer"/><div className="side-help"><CircleHelp size={18}/><b>Need a hand?</b><span>We’re always happy to help.</span><Link href="/contact">Visit help center <ArrowRight size={13}/></Link></div><button className="side-profile" onClick={()=>{localStorage.removeItem('jobz_user');router.push('/')}}><span className="avatar">{(user.name||'J')[0]}</span><span><b>{user.name}</b><small>{user.role==='admin'?'Administrator':user.role==='employer'?'Hiring manager':'Job seeker'}</small></span><LogOut size={16}/></button></aside><main className="dash-main"><header className="dash-header"><button className="icon-btn dash-menu-btn" onClick={()=>setMenu(!menu)}><Menu/></button><div className="breadcrumbs">Workspace <span>/</span> {pageTitle}</div><div className="dash-header-actions"><button className="icon-btn"><Search size={18}/></button><button className="icon-btn notification-btn"><Bell size={18}/><i/></button><span className="avatar">{(user.name||'J')[0]}</span></div></header><div className="dash-content"><div className="dash-welcome"><div><div className="kicker">{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()}</div><AnimatedHeading key={active} as="h1">{active==='dashboard'?<>Good morning, {user.name?.split(' ')[0]||'Jordan'} <span>✦</span></>:pageTitle}</AnimatedHeading><p>{active==='dashboard'?(roleKey==='employer'?'Here’s what’s happening with your hiring today.':roleKey==='admin'?'Here’s an overview of what’s happening across JobZ.':'A little progress adds up. Here’s your job search at a glance.'):`Manage your ${pageTitle.toLowerCase()} and keep your next steps moving.`}</p></div>{roleKey==='employer'&&<Link href="/employer/post-job" className="btn btn-primary"><Plus size={17}/> Post a job</Link>}</div>
-{active==='dashboard'?<DashboardHome roleKey={roleKey} jobs={jobs} saved={saved.length} apps={apps.length}/>:active==='find-jobs'?<><div className="dash-search"><Search/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by role, skill, or company"/><Link href="/jobs" className="btn btn-primary btn-sm">Browse jobs <ArrowRight size={15}/></Link></div><div className="dash-job-grid">{jobs.filter(j=>!search||j.title.toLowerCase().includes(search.toLowerCase())).slice(0,6).map(j=><JobCard key={j.id} job={j}/>)}</div></>:active==='saved-jobs'?<><div className="dash-job-grid">{jobs.filter(j=>saved.includes(j.id)).map(j=><JobCard key={j.id} job={j}/>)}</div>{!saved.length&&<Empty title="Your saved roles will live here" body="Save a role that catches your eye and come back whenever you’re ready."/>}</>:active==='applications'?<Table title="Your applications" headers={['Role','Company','Applied','Status']} rows={apps.map(a=>[a.jobTitle,a.company,a.date,a.status])} tabs={['All','Pending','Reviewed','Shortlisted','Interview','Rejected']}/>:active==='post-job'?<motion.div className="form-card motion-safe-enter" variants={reveal} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}><div className="form-section-title"><span>01</span><div><b>The role</b><small>Start with the essentials. You can add the details next.</small></div></div><div className="form-grid"><label>Job title<input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Senior Product Designer"/></label><label>Company<input className="input" value={company} onChange={e=>setCompany(e.target.value)}/></label><label>Job category<select className="input"><option>Product</option><option>Engineering</option><option>Design</option><option>Marketing</option></select></label><label>Job type<select className="input"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select></label><label>Work mode<select className="input"><option>Remote</option><option>Hybrid</option><option>On-site</option></select></label><label>Location<input className="input" placeholder="City, state or remote"/></label><label>Salary range<input className="input" placeholder="$100,000 – $150,000"/></label><label>Experience level<select className="input"><option>Mid-level</option><option>Entry-level</option><option>Senior</option></select></label><label className="full-field">Description<textarea className="input" placeholder="Tell candidates what makes this role exciting…" rows={5}/></label><label className="full-field">Skills<input className="input" placeholder="Add skills separated by commas"/></label></div><div className="form-footer"><button className="btn btn-outline" onClick={()=>{}}>Save as draft</button><button className="btn btn-primary" onClick={postJob}>Publish role <ArrowRight size={16}/></button></div></motion.div>:active==='manage-jobs'?<Table title="Your job posts" headers={['Role','Location','Type','Applicants','Posted','Status','Actions']} rows={jobs.slice(0,8).map((j,i)=>[j.title,j.location,j.type,String(12+i*4),j.posted,'Active','···'])}/>:active==='applicants'?<Table title="Recent applicants" headers={['Candidate','Applied for','Experience','Applied','Status']} rows={['Taylor Kim','Sam Rivera','Morgan Chen','Alex Morgan'].map((n,i)=>[n,jobs[i].title,`${3+i} years`,`${i+1} days ago`,i===0?'Shortlisted':'In review'])}/>:active==='profile'||active==='company-profile'?<ProfileForm roleKey={roleKey}/>:active==='analytics'?<DashboardHome roleKey={roleKey} jobs={jobs} saved={saved.length} apps={apps.length}/>:active==='resume'?<ResumePanel/>:active==='notifications'?<Notifications/>:active==='categories'?<Categories/>:active==='settings'?<SettingsPanel/>:<Table title={pageTitle} headers={['Name','Email','Joined','Status','Actions']} rows={['Taylor Kim','Jordan Lee','Morgan Chen','Sam Rivera'].map((n,i)=>[n,`${n.split(' ')[0].toLowerCase()}@example.com`,'Oct 2026',i?'Active':'Pending','···'])}/>}</div></main></div>}
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFeedback("");
+    setSubmitting(true);
 
-function DashboardHome({roleKey,jobs,saved,apps}:{roleKey:string;jobs:Job[];saved:number;apps:number}){const employer=roleKey==='employer',admin=roleKey==='admin';const metrics=employer?[['Active jobs','12','+2 this month'],['Total applicants','248','+18% this month'],['Shortlisted','32','8 need review'],['Interviews','14','This week']]:admin?[['Total members','48.2k','+12% this month'],['Job seekers','42.8k','+9.4%'],['Employers','5,420','+14.2%'],['Live jobs','2,406','+8.6%']]:[['Applications',String(apps||8),'+3 this week'],['Shortlisted','3','2 new updates'],['Interviews','2','Next one Thursday'],['Saved roles',String(saved||6),'A good place to start']];return <><motion.div className="metric-grid motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}>{metrics.map(([t,n,d],i)=><motion.div className="metric-card motion-safe-enter" key={t} variants={subtleReveal}><div className="metric-top"><span>{t}</span><span className="metric-icon">{i===0?<BriefcaseBusiness size={17}/>:i===1?<Users size={17}/>:i===2?<Sparkles size={17}/>:<Activity size={17}/>}</span></div><CountUp value={String(n)}/><small><span>↗</span> {d}</small></motion.div>)}</motion.div><div className="dash-two-col"><motion.div className="panel chart-panel motion-safe-enter" variants={subtleReveal} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.2}}><div className="panel-head"><div><b>{employer?'Job performance':admin?'Platform growth':'Application activity'}</b><small>{employer?'Your posts over the last 30 days':admin?'A healthy month across JobZ':'Keep showing up. It’s working.'}</small></div><select><option>Last 30 days</option><option>Last 7 days</option><option>This year</option></select></div><div className="chart-visual"><div className="chart-y"><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div><div className="chart-area"><div className="chart-gridlines"><i/><i/><i/><i/><i/></div><svg viewBox="0 0 700 210" preserveAspectRatio="none"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#5a73e8" stopOpacity=".2"/><stop offset="1" stopColor="#5a73e8" stopOpacity="0"/></linearGradient></defs><path d="M0,170 C65,155 75,140 120,150 S190,116 230,125 S290,95 340,112 S390,66 440,83 S510,35 555,64 S620,18 700,22 L700,210 L0,210Z" fill="url(#fill)"/><path d="M0,170 C65,155 75,140 120,150 S190,116 230,125 S290,95 340,112 S390,66 440,83 S510,35 555,64 S620,18 700,22" fill="none" stroke="#5b73df" strokeWidth="3" vectorEffect="non-scaling-stroke"/></svg><div className="chart-x"><span>Oct 14</span><span>Oct 19</span><span>Oct 24</span><span>Oct 29</span><span>Nov 3</span><span>Nov 8</span><span>Nov 13</span></div></div></div><div className="chart-legend"><span><i/> {employer?'Job views':'Your activity'}</span><span><i/> {employer?'Applications':'Response rate'}</span></div></motion.div><motion.div className="panel momentum-panel motion-safe-enter" variants={subtleReveal} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.2}}><div className="panel-head"><div><b>Your momentum</b><small>Little steps move you forward.</small></div><span className="momentum-spark">✦</span></div><div className="momentum-score"><strong>72</strong><span>/ 100</span><small>Looking good</small></div><div className="progress-track"><i style={{width:'72%'}}/></div><div className="momentum-tip"><Sparkles size={16}/><span><b>A small next step</b><br/>Add a few skills to your profile to get better matches.</span></div><Link href={employer?'/employer/company-profile':'/job-seeker/profile'} className="text-link">{employer?'Complete company profile':'Complete your profile'} <ArrowRight size={14}/></Link></motion.div></div><div className="panel table-panel"><div className="panel-head"><div><b>{employer?'Recent applicants':admin?'Recently joined':'Recent applications'}</b><small>{employer?'People excited about your roles':'Your latest activity at a glance'}</small></div><Link className="text-link" href={`/${roleKey==='seeker'?'job-seeker':roleKey}/applications`}>See all <ArrowRight size={14}/></Link></div><motion.div className="mini-table motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.2}}><div className="mini-row mini-head"><span>{employer?'CANDIDATE':'ROLE'}</span><span>{employer?'POSITION':'COMPANY'}</span><span>STATUS</span><span>DATE</span></div>{[0,1,2].map((i)=><motion.div className="mini-row motion-safe-enter" key={i} variants={subtleReveal}><span className="table-person"><span className="avatar avatar-small">{['T','S','M'][i]}</span><b>{employer?['Taylor Kim','Sam Rivera','Morgan Chen'][i]:jobs[i].title}</b></span><span>{employer?jobs[i].title:jobs[i].company}</span><span><i className={'status-dot status-'+i}/>{['Shortlisted','In review','Interview'][i]}</span><span>{i+1} days ago</span></motion.div>)}</motion.div></div></>}
-function Empty({title,body}:{title:string;body:string}){return <div className="empty-state"><BriefcaseBusiness/><h3>{title}</h3><p>{body}</p><Link href="/jobs" className="btn btn-primary">Explore open roles <ArrowRight size={15}/></Link></div>}
-function Table({title,headers,rows,tabs}:{title:string;headers:string[];rows:string[][];tabs?:string[]}){const [filter,setFilter]=useState('All');return <motion.div className="panel table-panel motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}><div className="panel-head"><div><b>{title}</b><small>{rows.length} results</small></div><label className="table-search"><Search size={15}/><input placeholder="Search…"/></label></div>{tabs&&<div className="table-tabs">{tabs.map(t=><button key={t} className={filter===t?'on':''} onClick={()=>setFilter(t)}>{t}</button>)}</div>}<div className="scroll-table"><div className="data-row data-head">{headers.map(h=><span key={h}>{h}</span>)}</div>{rows.filter(r=>filter==='All'||r.includes(filter)).map((r,i)=><motion.div className="data-row motion-safe-enter" key={i} variants={subtleReveal}>{r.map((c,j)=><span key={j}>{j===r.length-2?<i className="status-pill">{c}</i>:c}</span>)}</motion.div>)}</div>{!rows.length&&<Empty title="Nothing to show yet" body="When you have activity, it will appear here."/>}</motion.div>}
+    try {
+      const response = await fetch(
+        signup || adminSignup ? "/api/auth/register" : "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            signup || adminSignup
+              ? { fullName, email, password, phone, role: adminSignup ? "admin" : role }
+              : { email, password, rememberMe, ...(adminLogin ? { expectedRole: "admin" } : {}) },
+          ),
+        },
+      );
+      const result = await response.json();
+
+      if (!response.ok) {
+        setFeedback(result.message || "Request failed. Please try again.");
+        return;
+      }
+
+      if (signup || adminSignup) {
+        setFeedback(adminSignup ? "Admin account created. You can now sign in." : "Account created. You can now sign in.");
+        return;
+      }
+
+      const target = adminLogin ? "/admin/dashboard" :
+        result.user?.role === "jobSeeker"
+          ? "/job-seeker/dashboard"
+          : `/${result.user?.role}/dashboard`;
+      router.replace(target);
+      router.refresh();
+    } catch {
+      setFeedback("Could not connect to JobZ. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="auth-page">
+      <div className="auth-aside">
+        <Link href="/" className="brand">
+          <span className="brandmark">j</span>jobz<span className="branddot">.</span>
+        </Link>
+        <div>
+          <div className="kicker">YOUR NEXT CHAPTER STARTS HERE</div>
+          <AnimatedHeading as="h1">
+            Good work<br />finds <span className="serif-accent">good people.</span>
+          </AnimatedHeading>
+          <p>
+            Find meaningful work, meet thoughtful teams, and make your next move
+            with confidence.
+          </p>
+        </div>
+        <div className="auth-proof">
+          <span>★★★★★</span> Trusted by 40,000+ professionals
+        </div>
+      </div>
+      <section className="auth-form-wrap">
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <Link className="back-link" href="/">← Back to JobZ</Link>
+          <div className="kicker">
+            {adminSignup || adminLogin ? "ADMINISTRATOR ACCESS" : signup ? "START SOMETHING GOOD" : "WELCOME BACK"}
+          </div>
+          <AnimatedHeading as="h2">
+            {adminSignup ? "Create admin account" : signup ? "Create your account" : adminLogin ? "Admin sign in" : "Sign in to JobZ"}
+          </AnimatedHeading>
+          <p>
+            {adminSignup ? "Create an administrator account for JobZ." : signup
+              ? "A little closer to work that feels right."
+              : adminLogin ? "Sign in with your JobZ administrator account." : "Pick up right where your next chapter begins."}
+          </p>
+
+          {signup && !adminSignup && (
+            <>
+              <label className="input-label">I’m here as</label>
+              <div className="role-picker">
+                {([
+                  ["jobSeeker", "Job seeker"],
+                  ["employer", "Employer"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={role === value ? "selected" : ""}
+                    onClick={() => setRole(value)}
+                  >
+                    {value === "jobSeeker" ? (
+                      <Users size={18} />
+                    ) : (
+                      <Building2 size={18} />
+                    )}
+                    <span>{label}</span>
+                    {role === value && <Check size={15} />}
+                  </button>
+                ))}
+              </div>
+              <label className="input-label">
+                Full name
+                <input
+                  className="input"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  autoComplete="name"
+                  required
+                  minLength={2}
+                  maxLength={80}
+                  placeholder="Your name"
+                />
+              </label>
+            </>
+          )}
+          {adminSignup && <label className="input-label">Full name<input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" required minLength={2} maxLength={80} placeholder="Your name" /></label>}
+
+          <label className="input-label">
+            Email address
+            <input
+              className="input"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+              placeholder="you@example.com"
+            />
+          </label>
+          <label className="input-label">
+            Password
+            <input
+              className="input"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete={signup || adminSignup ? "new-password" : "current-password"}
+              required
+              minLength={signup || adminSignup ? 8 : undefined}
+              maxLength={72}
+              placeholder={signup || adminSignup ? "At least 8 characters" : "Your password"}
+            />
+          </label>
+          {signup && !adminSignup && (
+            <label className="input-label">
+              Phone number
+              <input
+                className="input"
+                type="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                autoComplete="tel"
+                placeholder="(555) 000-0000"
+              />
+            </label>
+          )}
+          {!signup && !adminSignup && (
+            <div className="form-inline">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(event) => setRememberMe(event.target.checked)}
+                />{" "}
+                Remember me
+              </label>
+              <Link href="/forgot-password">Forgot password?</Link>
+            </div>
+          )}
+
+          {feedback && (
+            <p className="auth-feedback" role="alert" aria-live="polite">
+              {feedback}
+            </p>
+          )}
+
+          <button className="btn btn-primary btn-wide" type="submit" disabled={submitting}>
+            {submitting
+              ? signup || adminSignup ? "Creating account…" : "Signing in…"
+            : signup || adminSignup ? "Create account" : adminLogin ? "Continue to admin" : "Continue to JobZ"}
+            {!submitting && <ArrowRight size={16} />}
+          </button>
+          <small className="auth-terms">
+            By continuing, you agree to our <a>Terms of Service</a> and{" "}
+            <a>Privacy Policy</a>.
+          </small>
+          <p className="auth-switch">
+            {adminSignup ? "Already have an admin account?" : adminLogin ? "Need an admin account?" : signup ? "Already have an account?" : "New to JobZ?"}{" "}
+            <Link href={adminSignup ? "/admin/login" : adminLogin ? "/admin/register" : signup ? "/login" : "/register"}>
+              {adminSignup ? "Admin sign in" : adminLogin ? "Register admin" : signup ? "Sign in" : "Create an account"}
+            </Link>
+          </p>
+        </form>
+      </section>
+    </main>
+  );
+}
+export function DashboardPage({ role, section }: { role: string; section: string }) {
+  const router = useRouter();
+  const { jobs, saved, apps, addJob } = useJobZ();
+  const [user, setUser] = useState<{ role: string; name: string } | null>(null);
+  const [menu, setMenu] = useState(false);
+  const [search, setSearch] = useState("");
+  const [title, setTitle] = useState("");
+  const [company, setCompany] = useState("Acme Studio");
+  const roleKey = role === "job-seeker" ? "seeker" : role;
+  const items = links[roleKey] || links.seeker;
+  const active = section || "dashboard";
+  const pageTitle = items.find((item) => item[1] === active)?.[0] || "Overview";
+
+  useEffect(() => {
+    let current = true;
+
+    async function loadCurrentUser() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) throw new Error("Authentication required.");
+
+        const result = await response.json();
+        const account = result.user;
+        const accountRole = account?.role === "jobSeeker" ? "seeker" : account?.role;
+
+        if (!current) return;
+        if (!account || !links[accountRole]) {
+          router.replace("/login");
+          return;
+        }
+        if (accountRole !== roleKey) {
+          router.replace(
+            accountRole === "seeker" ? "/job-seeker/dashboard" : `/${accountRole}/dashboard`,
+          );
+          return;
+        }
+
+        setUser({ role: accountRole, name: account.fullName });
+      } catch {
+        if (current) router.replace("/login");
+      }
+    }
+
+    void loadCurrentUser();
+    return () => {
+      current = false;
+    };
+  }, [roleKey, router]);
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setUser(null);
+      router.replace("/login");
+      router.refresh();
+    }
+  }
+
+  if (!user || user.role !== roleKey) {
+    return <div className="loading-screen"><span className="brandmark">j</span></div>;
+  }
+
+  const postJob = () => {
+    if (!title.trim()) return;
+    const job: Job = {
+      id: `custom-${Date.now()}`,
+      title,
+      company,
+      logo: company.charAt(0).toUpperCase(),
+      color: "#4c73e6",
+      location: "Remote · US",
+      salary: "$100k – $150k",
+      type: "Full-time",
+      mode: "Remote",
+      category: "Product",
+      posted: "Just now",
+      description: "Join our team and make a meaningful impact.",
+    };
+    addJob(job);
+    setTitle("");
+    router.push("/employer/manage-jobs");
+  };return <div className="dashboard-shell"><aside className={'dash-sidebar '+(menu?'show':'')}><Link className="brand dash-brand" href="/"><span className="brandmark">j</span>jobz<span className="branddot">.</span></Link><div className="workspace-switch"><span className="workspace-mark">{roleKey==='employer'?'A':roleKey==='admin'?'J':'J'}</span><span><b>{roleKey==='employer'?'Acme Studio':roleKey==='admin'?'JobZ Admin':'Jordan Lee'}</b><small>{roleKey==='employer'?'Hiring workspace':roleKey==='admin'?'Admin workspace':'Personal workspace'}</small></span><ChevronDown size={15}/></div><small className="side-label">WORKSPACE</small><nav className="side-nav">{items.map(([label,path],i)=>{const Icon=icons[Math.min(i,icons.length-1)];return <Link key={path} href={`/${role}/${path}`} className={active===path?'active':''}><Icon size={17}/>{label}{label==='Notifications'&&<span className="side-badge">3</span>}</Link>})}</nav><div className="side-spacer"/><div className="side-help"><CircleHelp size={18}/><b>Need a hand?</b><span>We’re always happy to help.</span><Link href="/contact">Visit help center <ArrowRight size={13}/></Link></div><button className="side-profile" onClick={handleLogout}><span className="avatar">{(user.name||'J')[0]}</span><span><b>{user.name}</b><small>{user.role==='admin'?'Administrator':user.role==='employer'?'Hiring manager':'Job seeker'}</small></span><LogOut size={16}/></button></aside><main className="dash-main"><header className="dash-header"><button className="icon-btn dash-menu-btn" onClick={()=>setMenu(!menu)}><Menu/></button><div className="breadcrumbs">Workspace <span>/</span> {pageTitle}</div><div className="dash-header-actions"><button className="icon-btn"><Search size={18}/></button><button className="icon-btn notification-btn"><Bell size={18}/><i/></button><span className="avatar">{(user.name||'J')[0]}</span></div></header><div className="dash-content"><div className="dash-welcome"><div><div className="kicker">{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()}</div><AnimatedHeading key={active} as="h1">{active==='dashboard'?<>Good morning, {user.name?.split(' ')[0]||'Jordan'} <span>✦</span></>:pageTitle}</AnimatedHeading><p>{active==='dashboard'?(roleKey==='employer'?'Here’s what’s happening with your hiring today.':roleKey==='admin'?'Here’s an overview of what’s happening across JobZ.':'A little progress adds up. Here’s your job search at a glance.'):`Manage your ${pageTitle.toLowerCase()} and keep your next steps moving.`}</p></div>{roleKey==='employer'&&<Link href="/employer/post-job" className="btn btn-primary"><Plus size={17}/> Post a job</Link>}</div>
+{active==='dashboard'?<DashboardOverview roleKey={roleKey}/>:active==='find-jobs'?<><div className="dash-search"><Search/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by role, skill, or company"/><Link href="/jobs" className="btn btn-primary btn-sm">Browse jobs <ArrowRight size={15}/></Link></div><div className="dash-job-grid">{jobs.filter(j=>!search||j.title.toLowerCase().includes(search.toLowerCase())).slice(0,6).map(j=><JobCard key={j.id} job={j}/>)}</div></>:active==='saved-jobs'?<><div className="dash-job-grid">{jobs.filter(j=>saved.includes(j.id)).map(j=><JobCard key={j.id} job={j}/>)}</div>{!saved.length&&<Empty title="Your saved roles will live here" body="Save a role that catches your eye and come back whenever you’re ready."/>}</>:active==='jobs'&&roleKey==='admin'?<AdminJobsManager/>:active==='applications'?<Table title="Your applications" headers={['Role','Company','Applied','Status']} rows={apps.map(a=>[a.jobTitle,a.company,a.date,a.status])} tabs={['All','Pending','Reviewed','Shortlisted','Interview','Rejected']}/>:active==='post-job'?<motion.div className="form-card motion-safe-enter" variants={reveal} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}><div className="form-section-title"><span>01</span><div><b>The role</b><small>Start with the essentials. You can add the details next.</small></div></div><div className="form-grid"><label>Job title<input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Senior Product Designer"/></label><label>Company<input className="input" value={company} onChange={e=>setCompany(e.target.value)}/></label><label>Job category<select className="input"><option>Product</option><option>Engineering</option><option>Design</option><option>Marketing</option></select></label><label>Job type<select className="input"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select></label><label>Work mode<select className="input"><option>Remote</option><option>Hybrid</option><option>On-site</option></select></label><label>Location<input className="input" placeholder="City, state or remote"/></label><label>Salary range<input className="input" placeholder="$100,000 – $150,000"/></label><label>Experience level<select className="input"><option>Mid-level</option><option>Entry-level</option><option>Senior</option></select></label><label className="full-field">Description<textarea className="input" placeholder="Tell candidates what makes this role exciting…" rows={5}/></label><label className="full-field">Skills<input className="input" placeholder="Add skills separated by commas"/></label></div><div className="form-footer"><button className="btn btn-outline" onClick={()=>{}}>Save as draft</button><button className="btn btn-primary" onClick={postJob}>Publish role <ArrowRight size={16}/></button></div></motion.div>:active==='manage-jobs'?<Table title="Your job posts" headers={['Role','Location','Type','Applicants','Posted','Status','Actions']} rows={jobs.slice(0,8).map((j,i)=>[j.title,j.location,j.type,String(12+i*4),j.posted,'Active','···'])}/>:active==='applicants'?<Table title="Recent applicants" headers={['Candidate','Applied for','Experience','Applied','Status']} rows={['Taylor Kim','Sam Rivera','Morgan Chen','Alex Morgan'].map((n,i)=>[n,jobs[i]?.title ?? "No job data",`${3+i} years`,`${i+1} days ago`,i===0?'Shortlisted':'In review'])}/>:active==='profile'||active==='company-profile'?<ProfileForm roleKey={roleKey}/>:active==='analytics'?<DashboardOverview roleKey={roleKey}/>:active==='resume'?<ResumePanel/>:active==='notifications'?<Notifications/>:active==='categories'?<Categories/>:active==='settings'?<SettingsPanel/>:<Table title={pageTitle} headers={['Name','Email','Joined','Status','Actions']} rows={['Taylor Kim','Jordan Lee','Morgan Chen','Sam Rivera'].map((n,i)=>[n,`${n.split(' ')[0].toLowerCase()}@example.com`,'Oct 2026',i?'Active':'Pending','···'])}/>}</div></main></div>}
+
 function ProfileForm({roleKey}:{roleKey:string}){return <motion.div className="form-card motion-safe-enter" variants={reveal} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}><div className="profile-cover"><div className="profile-avatar">J</div><button className="btn btn-outline btn-sm">Change photo</button></div><div className="form-grid"><label>{roleKey==='employer'?'Company name':'Full name'}<input className="input" defaultValue={roleKey==='employer'?'Acme Studio':'Jordan Lee'}/></label><label>{roleKey==='employer'?'Website':'Email'}<input className="input" defaultValue={roleKey==='employer'?'acmestudio.com':'jordan@example.com'}/></label><label>{roleKey==='employer'?'Industry':'Phone'}<input className="input" placeholder={roleKey==='employer'?'Design & technology':'(555) 555-0100'}/></label><label>Location<input className="input" defaultValue="Brooklyn, NY"/></label><label className="full-field">{roleKey==='employer'?'About your company':'Professional headline'}<textarea className="input" rows={4} placeholder="Tell us a little more…"/></label><label className="full-field">Skills<input className="input" defaultValue="Product design, Figma, Research"/></label></div><div className="form-footer"><button className="btn btn-primary">Save changes</button></div></motion.div>}
 function ResumePanel(){const [file,setFile]=useState('Jordan_Lee_Resume.pdf');return <motion.div className="panel resume-panel motion-safe-enter" variants={reveal} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}><div className="resume-preview"><FileText size={46}/><b>{file}</b><small>PDF document · Updated today</small></div><label className="upload-drop"><input type="file" accept=".pdf,.doc,.docx" onChange={e=>e.target.files?.[0]&&setFile(e.target.files[0].name)}/><Plus/> <b>Upload a new resume</b><span>PDF or DOCX, up to 10 MB</span></label><p>Your resume is only shared with employers when you apply to a role.</p></motion.div>}
 function Notifications(){return <motion.div className="panel notifications-panel motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{once:true,amount:0.15}}>{[['You’ve been shortlisted!','Linear would love to meet you for the Product Designer role.','10 min ago'],['New roles picked for you','3 new design roles match your profile.','Yesterday'],['Application received','Notion received your application for Product Marketing Manager.','2 days ago']].map(([a,b,c],i)=><motion.div className="notification-item motion-safe-enter" key={a} variants={subtleReveal}><span className="notification-icon">{i===0?<Sparkles/>:i===1?<BriefcaseBusiness/>:<Check/>}</span><div><b>{a}</b><p>{b}</p><small>{c}</small></div><i className="unread-dot"/></motion.div>)}</motion.div>}

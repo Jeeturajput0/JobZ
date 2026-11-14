@@ -1,2 +1,2 @@
-import { CompaniesPage } from '@/components/portal';
-export default function Page(){return <CompaniesPage/>;}
+import { CompaniesDirectory } from '@/components/company-pages';
+export default function Page(){return <CompaniesDirectory/>;}

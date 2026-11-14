@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // 2. Get data from request body
     const body = await request.json();
 
-    const { fullName, email, password, phone } = body;
+    const { fullName, email, password, phone, role: requestedRole } = body;
 
     // 3. Validate required fields
     if (!fullName || !email || !password) {
@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       typeof fullName !== "string" ||
       typeof email !== "string" ||
       typeof password !== "string" ||
-      (phone !== undefined && typeof phone !== "string")
+      (phone !== undefined && typeof phone !== "string") ||
+      (requestedRole !== undefined && typeof requestedRole !== "string")
     ) {
       return NextResponse.json(
         { success: false, message: "Invalid input data." },
@@ -41,6 +42,14 @@ export async function POST(request: NextRequest) {
 
     const cleanName = fullName.trim();
     const cleanEmail = email.trim().toLowerCase();
+    const role = requestedRole ?? "jobSeeker";
+
+    if (role !== "jobSeeker" && role !== "employer" && role !== "admin") {
+      return NextResponse.json(
+        { success: false, message: "Invalid account role." },
+        { status: 400 }
+      );
+    }
 
     if (cleanName.length < 2 || cleanName.length > 80) {
       return NextResponse.json(
@@ -82,7 +91,7 @@ export async function POST(request: NextRequest) {
       email: cleanEmail,
       password: hashedPassword,
       phone: phone?.trim() || "",
-      role: "jobSeeker",
+      role,
     });
 
     // 8. Return safe response (never return password)

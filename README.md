@@ -1,6 +1,6 @@
 # JobZ
 
-Frontend-only job portal demo built with Next.js App Router, TypeScript, React Context, and localStorage.
+Job portal built with Next.js App Router, TypeScript, MongoDB, and Mongoose.
 
 ## Run locally
 
@@ -9,4 +9,8 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Use **Get started** or **Log in**, then select Job seeker, Employer, or Admin demo. Demo state is stored in localStorage.
+Open http://localhost:3000. Use **Get started** or **Log in** for candidate and employer accounts.
+
+## Admin account setup
+
+Visit `/admin/register` to create an administrator account, then sign in at `/admin/login`.

@@ -26,7 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useJobZ } from "./provider";
-import type { Job } from "@/data/jobs";
+import { toJob, type ApiJob, type Job } from "@/data/jobs";
 import { AnimatedHeading } from "./animations/AnimatedHeading";
 import { quickSpring, reveal, stagger, subtleReveal } from "@/lib/motion";
 
@@ -34,6 +34,7 @@ const MotionLink = motion.create(Link);
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   return (
     <motion.header className="nav motion-safe-enter" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
       <Link href="/" className="brand">
@@ -41,11 +42,11 @@ export function Navbar() {
         <span className="branddot">.</span>
       </Link>
       <nav className={open ? "navlinks open" : "navlinks"}>
-        <Link href="/">Home</Link>
-        <Link href="/jobs">Find jobs</Link>
-        <Link href="/companies">Companies</Link>
-        <a href="/about">About us</a>
-        <Link href="/contact">Contact</Link>
+        <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Home</Link>
+        <Link href="/jobs" aria-current={pathname.startsWith("/jobs") ? "page" : undefined}>Find jobs</Link>
+        <Link href="/companies" aria-current={pathname.startsWith("/companies") ? "page" : undefined}>Companies</Link>
+        <Link href="/about" aria-current={pathname === "/about" ? "page" : undefined}>About us</Link>
+        <Link href="/contact" aria-current={pathname === "/contact" ? "page" : undefined}>Contact</Link>
         <div className="mobile-actions">
           <Link href="/login" className="btn btn-ghost">
             Log in
@@ -121,8 +122,22 @@ export function Footer() {
   );
 }
 
-const jobsCount = "2,400+";
 export function HomePage() {
+  const { jobs, jobTotal, jobsLoading, jobsError } = useJobZ();
+  const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
+  const [companies, setCompanies] = useState<{ id: string; name: string; logo: string; industry: string; location: string; jobCount: number }[]>([]);
+  const [directoryError, setDirectoryError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetch("/api/categories", { cache: "no-store" }), fetch("/api/companies", { cache: "no-store" })])
+      .then(async ([categoryResponse, companyResponse]) => {
+        if (!categoryResponse.ok || !companyResponse.ok) throw new Error("Could not load company and category data.");
+        const [categoryData, companyData] = await Promise.all([categoryResponse.json(), companyResponse.json()]);
+        if (active) { setCategories(categoryData.categories || []); setCompanies(companyData.companies || []); }
+      })
+      .catch(() => { if (active) setDirectoryError(true); });
+    return () => { active = false; };
+  }, []);
   return (
     <>
       <Navbar />
@@ -131,7 +146,7 @@ export function HomePage() {
           <div className="hero-content">
             <motion.div className="eyebrow" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.12 }}>
               <span className="eyebrow-dot" /> A better way to work
-              <span className="eyebrow-line" /> Loved by 40,000+ professionals
+              <span className="eyebrow-line" /> A more thoughtful job search
             </motion.div>
             <AnimatedHeading as="h1">
               Find work that
@@ -139,24 +154,10 @@ export function HomePage() {
               works <span className="serif-accent">for you.</span>
             </AnimatedHeading>
             <motion.p className="hero-sub motion-safe-enter" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}>
-              Your next chapter starts here. Discover meaningful opportunities
-              at companies that value what you bring.
+              Discover meaningful opportunities at companies that value what you bring.
             </motion.p>
             <SearchBar />
-            <div className="hero-foot">
-              <div className="avatar-stack">
-                <i>J</i>
-                <i>M</i>
-                <i>A</i>
-                <i>+</i>
-              </div>
-              <span>
-                <b>4,800+</b> people found their fit this month
-              </span>
-              <span className="hero-rating">
-                ★★★★★ <small>4.9/5 candidate rating</small>
-              </span>
-            </div>
+            <div className="hero-foot"><ShieldCheck size={16}/><span>Real roles. Clear details. A better way forward.</span></div>
           </div>
           <motion.div className="hero-art motion-safe-enter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}>
             <div className="art-glow" />
@@ -171,44 +172,20 @@ export function HomePage() {
                 changes everything.”
               </div>
               <div className="board-line" />
-              <div className="mini-role">
-                <span
-                  className="mini-logo"
-                  style={{ background: "#e8eaff", color: "#5e6ad2" }}
-                >
-                  L
-                </span>
-                <div>
-                  <b>Product Designer</b>
-                  <small>Linear · Remote</small>
-                </div>
-                <span className="match">98% match</span>
-              </div>
-              <div className="mini-role">
-                <span
-                  className="mini-logo"
-                  style={{ background: "#e7f8ef", color: "#16a34a" }}
-                >
-                  S
-                </span>
-                <div>
-                  <b>Design Lead</b>
-                  <small>Stripe · New York</small>
-                </div>
-                <span className="match">94% match</span>
-              </div>
+              {jobs.slice(0, 2).map((job) => <div className="mini-role" key={job.id}><span className="mini-logo" style={{ background: "#e8eaff", color: "#5e6ad2" }}>{job.logo}</span><div><b>{job.title}</b><small>{job.company} · {job.location}</small></div><span className="match">{job.mode}</span></div>)}
+              {!jobs.length && <div className="mini-role"><span className="mini-logo">J</span><div><b>Find your next chapter</b><small>New opportunities added by employers</small></div></div>}
               <div className="board-bottom">
                 <span>
-                  <b>2,400+</b>
+                  <b>{jobsLoading ? "—" : jobTotal}</b>
                   <small>open roles</small>
                 </span>
                 <span>
-                  <b>680</b>
-                  <small>hiring teams</small>
+                  <b>{companies.length}</b>
+                  <small>companies</small>
                 </span>
                 <span>
-                  <b>Daily</b>
-                  <small>new matches</small>
+                  <b>Direct</b>
+                  <small>job details</small>
                 </span>
               </div>
             </div>
@@ -217,8 +194,8 @@ export function HomePage() {
                 <Check size={16} />
               </span>
               <div>
-                <b>You’re a great fit!</b>
-                <small>Product Designer · Linear</small>
+                <b>Find work that fits you</b>
+                <small>Explore active opportunities</small>
               </div>
             </div>
             <div className="float-card float-bottom">
@@ -226,8 +203,8 @@ export function HomePage() {
                 <Sparkles size={17} />
               </span>
               <div>
-                <b>Opportunity found</b>
-                <small>Just for your profile</small>
+                <b>Search with confidence</b>
+                <small>Real roles from employers</small>
               </div>
               <ArrowRight size={16} />
             </div>
@@ -235,17 +212,7 @@ export function HomePage() {
             <div className="art-orbit orbit-two" />
           </motion.div>
         </section>
-        <section className="trust">
-          <span>GOOD PEOPLE, GREAT TEAMS</span>
-          <motion.div className="trust-logos motion-safe-enter" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, staggerChildren: 0.06 }}>
-            <motion.b className="motion-safe-enter" variants={subtleReveal}>◈ linear</motion.b>
-            <motion.b className="motion-safe-enter" variants={subtleReveal}>◉ notion</motion.b>
-            <motion.b className="motion-safe-enter" variants={subtleReveal}>▲ Vercel</motion.b>
-            <motion.b className="motion-safe-enter" variants={subtleReveal}>◧ Webflow</motion.b>
-            <motion.b className="motion-safe-enter" variants={subtleReveal}>◉ stripe</motion.b>
-            <motion.b className="motion-safe-enter" variants={subtleReveal}>✳ Figma</motion.b>
-          </motion.div>
-        </section>
+        <section className="trust"><span>COMPANIES HIRING ON JOBZ</span>{companies.length ? <div className="trust-logos">{companies.slice(0,6).map(company => <b key={company.id}>{company.name}</b>)}</div> : <p className="directory-note">{directoryError ? "Company directory is temporarily unavailable." : "Company profiles will appear here as employers join JobZ."}</p>}</section>
         <section className="section categories">
           <div className="section-heading">
             <div>
@@ -260,14 +227,7 @@ export function HomePage() {
             </Link>
           </div>
           <motion.div className="category-grid motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
-            {[
-              ["✳", "Design", "1,240 roles", "#f0edff"],
-              ["⌘", "Engineering", "3,820 roles", "#eaf2ff"],
-              ["↗", "Marketing", "960 roles", "#fff2e8"],
-              ["▦", "Product", "780 roles", "#e9f8f2"],
-              ["◎", "Customer success", "1,105 roles", "#fff0f5"],
-              ["⌁", "Data & analytics", "640 roles", "#eff6ff"],
-            ].map(([icon, title, count, bg]) => (
+            {categories.slice(0, 6).map(({ name: title, count }) => { const CategoryIcon = title.toLowerCase().includes("design") ? Sparkles : title.toLowerCase().includes("engineer") || title.toLowerCase().includes("data") ? BriefcaseBusiness : title.toLowerCase().includes("market") ? Zap : title.toLowerCase().includes("product") ? Compass : Users; const bg = title.length % 2 ? "#f0edff" : "#eaf2ff"; return (
               <MotionLink
                 href={"/jobs?category=" + encodeURIComponent(title)}
                 className="category-card motion-safe-enter"
@@ -275,14 +235,15 @@ export function HomePage() {
                 variants={subtleReveal}
               >
                 <span className="category-icon" style={{ background: bg }}>
-                  {icon}
+                  <CategoryIcon size={20} />
                 </span>
                 <strong>{title}</strong>
-                <small>{count}</small>
+                <small>{count} active {count === 1 ? "role" : "roles"}</small>
                 <ArrowRight size={16} className="category-arrow" />
               </MotionLink>
-            ))}
+            );})}
           </motion.div>
+          {!categories.length && <div className="empty-state">{directoryError ? "Categories are temporarily unavailable." : "New job categories will appear as approved roles are posted."}</div>}
         </section>
         <section className="section featured">
           <div className="section-heading">
@@ -295,11 +256,23 @@ export function HomePage() {
               See all jobs <ArrowRight size={16} />
             </Link>
           </div>
-          <motion.div className="feature-grid motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
-            {["j1", "j2", "j3"].map((id) => (
-              <JobCard key={id} id={id} staggered />
-            ))}
-          </motion.div>
+          {jobsLoading ? (
+            <div className="feature-grid">{[0,1,2].map((item) => <div className="job-skeleton" key={item} aria-hidden="true" />)}</div>
+          ) : jobsError ? (
+            <p role="alert">{jobsError}</p>
+          ) : jobs.filter((job) => job.featured).length ? (
+            <motion.div className="feature-grid motion-safe-enter" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
+              {jobs.filter((job) => job.featured).slice(0, 3).map((job) => (
+                <JobCard key={job.id} job={job} staggered />
+              ))}
+            </motion.div>
+          ) : (
+            <div className="empty-state"><BriefcaseBusiness size={24}/><h3>No featured jobs yet</h3><p>Check back soon for selected opportunities from verified employers.</p><Link className="btn btn-outline" href="/jobs">Browse all jobs</Link></div>
+          )}
+        </section>
+        <section className="section company-showcase">
+          <div className="section-heading"><div><div className="kicker">THOUGHTFUL TEAMS</div><h2>Meet the companies behind the work.</h2><p>Explore real employer profiles and their current openings.</p></div><Link className="text-link" href="/companies">All companies <ArrowRight size={16}/></Link></div>
+          {companies.length ? <div className="company-home-grid">{companies.slice(0, 3).map((company) => <article className="company-home-card" key={company.id}><div className="company-home-identity"><span className="company-home-logo">{company.logo ? <img src={company.logo} alt=""/> : company.name.slice(0, 1).toUpperCase()}</span><div><h3>{company.name}</h3><p>{company.industry || "Employer"}{company.location ? ` · ${company.location}` : ""}</p></div></div><div className="company-home-bottom"><span>{company.jobCount} active {company.jobCount === 1 ? "job" : "jobs"}</span><Link className="text-link" href="/companies">View company <ArrowRight size={14}/></Link></div></article>)}</div> : <div className="empty-state">{directoryError ? "Company profiles are temporarily unavailable." : "Company profiles will appear here as employers join JobZ."}</div>}
         </section>
         <section className="why" id="about">
           <div className="why-left">
@@ -355,11 +328,12 @@ export function HomePage() {
           <div>
             <div className="kicker">YOUR NEXT CHAPTER IS OUT THERE</div>
             <AnimatedHeading as="h2">Ready for work that feels right?</AnimatedHeading>
-            <p>Join thousands finding a better fit with JobZ.</p>
+            <p>Create your free profile and discover opportunities that match your future.</p>
           </div>
           <Link href="/register" className="btn btn-white">
             Create your free profile <ArrowRight size={16} />
           </Link>
+          <Link href="/jobs" className="btn btn-outline cta-browse">Browse jobs</Link>
         </motion.section>
       </main>
       <Footer />
@@ -400,7 +374,8 @@ function SearchBar() {
 
 export function JobCard({ id, job: custom, staggered = false }: { id?: string; job?: Job; staggered?: boolean }) {
   const { jobs, saved, toggleSave } = useJobZ();
-  const j = custom || jobs.find((x) => x.id === id) || jobs[0];
+  const j = custom || jobs.find((x) => x.id === id);
+  if (!j) return null;
   return (
     <motion.article className="job-card motion-safe-enter" variants={subtleReveal} {...(!staggered && { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.18 } })} whileHover={{ y: -3 }}>
       <div className="job-card-top">
@@ -443,7 +418,7 @@ export function JobCard({ id, job: custom, staggered = false }: { id?: string; j
 }
 
 export function JobsPage() {
-  const { jobs, saved, toggleSave, apply } = useJobZ();
+  const { jobs, jobsLoading, jobsError, saved, toggleSave, apply } = useJobZ();
   const sp = useSearchParams();
   const [query, setQuery] = useState(sp.get("q") || ""),
     [loc, setLoc] = useState(sp.get("location") || ""),
@@ -597,7 +572,11 @@ export function JobsPage() {
                 </select>
               </label>
             </div>
-            {filtered.length ? (
+            {jobsLoading ? (
+              <p role="status">Loading jobs…</p>
+            ) : jobsError ? (
+              <p role="alert">{jobsError}</p>
+            ) : filtered.length ? (
               <div className="results-list">
                 {filtered.map((j, index) => {
                   const shouldAnimate = !animatedResultIds.current.has(j.id);
@@ -691,9 +670,53 @@ export function JobsPage() {
 }
 
 export function JobDetail({ id }: { id: string }) {
-  const { jobs, saved, toggleSave, apply } = useJobZ();
+  const { saved, toggleSave, apply } = useJobZ();
+  const [job, setJob] = useState<Job | null>(null);
+  const [jobError, setJobError] = useState("");
   const [modal, setModal] = useState(false);
-  const job = jobs.find((x) => x.id === id) || jobs[0];
+
+  useEffect(() => {
+    let current = true;
+
+    async function loadJob() {
+      setJob(null);
+      setJobError("");
+      try {
+        const response = await fetch(`/api/jobs/${encodeURIComponent(id)}`, {
+          cache: "no-store",
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Could not load this job.");
+        }
+        if (current) setJob(toJob(result.job as ApiJob));
+      } catch (error) {
+        if (current) {
+          setJobError(
+            error instanceof Error ? error.message : "Could not load this job.",
+          );
+        }
+      }
+    }
+
+    void loadJob();
+    return () => {
+      current = false;
+    };
+  }, [id]);
+
+  if (!job) {
+    return (
+      <>
+        <Navbar />
+        <main className="detail-page" aria-live="polite">
+          {jobError ? jobError : "Loading job details…"}
+          {jobError && <p><Link href="/jobs">Browse all jobs</Link></p>}
+        </main>
+        <Footer />
+      </>
+    );
+  }
   return (
     <>
       <Navbar />
@@ -745,47 +768,33 @@ export function JobDetail({ id }: { id: string }) {
             </div>
             <div className="detail-content">
               <h2>About this role</h2>
-              <p>
-                {job.description} You’ll work closely with a thoughtful,
-                collaborative team to make a meaningful impact. We value craft,
-                curiosity, and people who care about doing great work together.
-              </p>
-              <h3>What you’ll do</h3>
-              <ul>
-                <li>
-                  Build and improve experiences that solve real customer
-                  problems.
-                </li>
-                <li>
-                  Collaborate across a kind, ambitious, and highly capable team.
-                </li>
-                <li>Bring thoughtful ideas from discovery through delivery.</li>
-                <li>Help us make our product and team better every day.</li>
-              </ul>
-              <h3>What you’ll bring</h3>
-              <ul>
-                <li>
-                  Relevant experience in {job.category.toLowerCase()} or a
-                  related field.
-                </li>
-                <li>Clear communication and a collaborative working style.</li>
-                <li>
-                  Comfort with ambiguity and a bias toward thoughtful action.
-                </li>
-              </ul>
-              <h3>About {job.company}</h3>
-              <p>
-                {job.company} is a team of curious people building products that
-                make work more meaningful. We care deeply about our craft, our
-                customers, and the way we work together.
-              </p>
-              <h3>Benefits</h3>
-              <div className="benefit-pills">
-                <span>Health coverage</span>
-                <span>Flexible time off</span>
-                <span>Learning budget</span>
-                <span>Remote friendly</span>
-              </div>
+              <p>{job.description}</p>
+              {!!job.responsibilities?.length && (
+                <>
+                  <h3>What you’ll do</h3>
+                  <ul>{job.responsibilities.map((item) => <li key={item}>{item}</li>)}</ul>
+                </>
+              )}
+              {!!job.requirements?.length && (
+                <>
+                  <h3>What you’ll bring</h3>
+                  <ul>{job.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
+                </>
+              )}
+              {job.companyDescription && (
+                <>
+                  <h3>About {job.company}</h3>
+                  <p>{job.companyDescription}</p>
+                </>
+              )}
+              {!!job.benefits?.length && (
+                <>
+                  <h3>Benefits</h3>
+                  <div className="benefit-pills">
+                    {job.benefits.map((benefit) => <span key={benefit}>{benefit}</span>)}
+                  </div>
+                </>
+              )}
             </div>
           </section>
           <aside className="detail-sidebar">
@@ -822,7 +831,7 @@ export function JobDetail({ id }: { id: string }) {
               <div>
                 <Compass />
                 <span>
-                  <small>Experience</small>Mid – Senior level
+                  <small>Experience</small>{job.experienceLevel || "Not specified"}
                 </span>
               </div>
               <button
@@ -834,9 +843,9 @@ export function JobDetail({ id }: { id: string }) {
             </div>
             <div className="help-card">
               <CircleHelp />
-              <b>Questions about the role?</b>
-              <p>Reach out to the hiring team directly.</p>
-              <a href="mailto:careers@example.com">Contact the team →</a>
+              <b>Questions about JobZ?</b>
+              <p>Contact our support team for help with your application.</p>
+              <Link href="/contact">Contact support →</Link>
             </div>
           </aside>
         </div>

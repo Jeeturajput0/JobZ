@@ -10,6 +10,212 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+const JOB_TYPES = ["full-time", "part-time", "internship", "contract"];
+const WORK_MODES = ["onsite", "remote", "hybrid"];
+const JOB_STATUSES = ["draft", "active", "inactive", "closed"];
+const APPROVAL_STATUSES = ["pending", "approved", "rejected"];
+
+function isDuplicateKeyError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === 11000
+  );
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: RouteContext,
+) {
+  const auth = authorize(request, ["admin"]);
+  if (!auth.authorized) return auth.response;
+
+  const { id } = await params;
+  if (!/^[a-f\d]{24}$/i.test(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid job ID." },
+      { status: 400 },
+    );
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, message: "Request body must be valid JSON." },
+      { status: 400 },
+    );
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json(
+      { success: false, message: "Request body must be a JSON object." },
+      { status: 400 },
+    );
+  }
+
+  const input = body as Record<string, unknown>;
+  const editableFields = [
+    "title",
+    "slug",
+    "category",
+    "description",
+    "responsibilities",
+    "requirements",
+    "skills",
+    "jobType",
+    "workMode",
+    "experienceLevel",
+    "minSalary",
+    "maxSalary",
+    "location",
+    "benefits",
+    "applicationDeadline",
+    "status",
+    "approvalStatus",
+    "isFeatured",
+  ];
+  const unknownFields = Object.keys(input).filter(
+    (field) => !editableFields.includes(field),
+  );
+  if (unknownFields.length) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: `These fields cannot be updated: ${unknownFields.join(", ")}.`,
+      },
+      { status: 400 },
+    );
+  }
+
+  for (const field of ["title", "slug", "category", "description", "experienceLevel", "location"]) {
+    if (field in input && (typeof input[field] !== "string" || !input[field].trim())) {
+      return NextResponse.json(
+        { success: false, message: `${field} is required and must be text.` },
+        { status: 400 },
+      );
+    }
+  }
+  if ("jobType" in input && !JOB_TYPES.includes(input.jobType as string)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid job type." },
+      { status: 400 },
+    );
+  }
+  if ("workMode" in input && !WORK_MODES.includes(input.workMode as string)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid work mode." },
+      { status: 400 },
+    );
+  }
+  if ("status" in input && !JOB_STATUSES.includes(input.status as string)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid job status." },
+      { status: 400 },
+    );
+  }
+  if (
+    "approvalStatus" in input &&
+    !APPROVAL_STATUSES.includes(input.approvalStatus as string)
+  ) {
+    return NextResponse.json(
+      { success: false, message: "Invalid approval status." },
+      { status: 400 },
+    );
+  }
+  for (const field of ["responsibilities", "requirements", "skills", "benefits"]) {
+    if (
+      field in input &&
+      (!Array.isArray(input[field]) ||
+        !input[field].every((value) => typeof value === "string"))
+    ) {
+      return NextResponse.json(
+        { success: false, message: `${field} must be an array of strings.` },
+        { status: 400 },
+      );
+    }
+  }
+  for (const field of ["minSalary", "maxSalary"]) {
+    const value = input[field];
+    if (
+      field in input &&
+      value !== null &&
+      (typeof value !== "number" || !Number.isFinite(value) || value < 0)
+    ) {
+      return NextResponse.json(
+        { success: false, message: `${field} must be a non-negative number or null.` },
+        { status: 400 },
+      );
+    }
+  }
+  if ("isFeatured" in input && typeof input.isFeatured !== "boolean") {
+    return NextResponse.json(
+      { success: false, message: "isFeatured must be a boolean." },
+      { status: 400 },
+    );
+  }
+  if (
+    "applicationDeadline" in input &&
+    input.applicationDeadline !== null &&
+    (typeof input.applicationDeadline !== "string" ||
+      Number.isNaN(Date.parse(input.applicationDeadline)))
+  ) {
+    return NextResponse.json(
+      { success: false, message: "applicationDeadline must be a valid date or null." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    await connectDB();
+    const job = await Job.findById(id);
+    if (!job) {
+      return NextResponse.json(
+        { success: false, message: "Job not found." },
+        { status: 404 },
+      );
+    }
+
+    const nextMin = "minSalary" in input ? input.minSalary : job.minSalary;
+    const nextMax = "maxSalary" in input ? input.maxSalary : job.maxSalary;
+    if (
+      typeof nextMin === "number" &&
+      typeof nextMax === "number" &&
+      nextMin > nextMax
+    ) {
+      return NextResponse.json(
+        { success: false, message: "minSalary cannot exceed maxSalary." },
+        { status: 400 },
+      );
+    }
+
+    for (const [field, value] of Object.entries(input)) {
+      job.set(field, field === "applicationDeadline" && value ? new Date(value as string) : value);
+    }
+    await job.save();
+    await job.populate("companyId", "companyName companyLogo industry location website description");
+
+    return NextResponse.json({
+      success: true,
+      message: "Job updated successfully.",
+      job,
+    });
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return NextResponse.json(
+        { success: false, message: "A job already uses this slug." },
+        { status: 409 },
+      );
+    }
+    console.error("Admin update job error:", error);
+    return NextResponse.json(
+      { success: false, message: "Could not update this job." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: RouteContext

@@ -13,12 +13,14 @@ export async function POST(request: NextRequest) {
 
     // 2. Get login details
     const body = await request.json();
-    const { email, password } = body;
+    const { email, password, rememberMe = false, expectedRole } = body;
 
     // 3. Validate input
     if (
       typeof email !== "string" ||
       typeof password !== "string" ||
+      typeof rememberMe !== "boolean" ||
+      (expectedRole !== undefined && expectedRole !== "admin") ||
       !email.trim() ||
       !password
     ) {
@@ -75,6 +77,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (expectedRole === "admin" && user.role !== "admin") {
+      return NextResponse.json(
+        { success: false, message: "This account does not have administrator access." },
+        { status: 403 },
+      );
+    }
+
     // 7. Check JWT secret
     const jwtSecret = process.env.JWT_SECRET;
 
@@ -89,7 +98,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
       },
       jwtSecret,
-      { expiresIn: "7d" }
+      { expiresIn: rememberMe ? "7d" : "1d" }
     );
 
     // 9. Create response
@@ -108,13 +117,18 @@ export async function POST(request: NextRequest) {
     );
 
     // 10. Store token in secure HttpOnly cookie
-    response.cookies.set("jobz_token", token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    };
+
+    response.cookies.set(
+      "jobz_token",
+      token,
+      rememberMe ? { ...cookieOptions, maxAge: 60 * 60 * 24 * 7 } : cookieOptions
+    );
 
     return response;
   } catch (error) {

@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
-import { seedJobs, type Job } from "@/data/jobs";
+import { toJob, type ApiJob, type Job } from "@/data/jobs";
 type AppItem = {
   id: string;
   jobId: string;
@@ -12,6 +12,9 @@ type AppItem = {
 };
 type Ctx = {
   jobs: Job[];
+  jobTotal: number;
+  jobsLoading: boolean;
+  jobsError: string | null;
   saved: string[];
   apps: AppItem[];
   toggleSave: (id: string) => void;
@@ -21,28 +24,45 @@ type Ctx = {
 };
 const Context = createContext<Ctx | null>(null);
 export function JobZProvider({ children }: { children: React.ReactNode }) {
-  const [jobs, setJobs] = useState(seedJobs),
+  const [jobs, setJobs] = useState<Job[]>([]),
+    [jobTotal, setJobTotal] = useState(0),
+    [jobsLoading, setJobsLoading] = useState(true),
+    [jobsError, setJobsError] = useState<string | null>(null),
     [saved, setSaved] = useState<string[]>([]),
     [apps, setApps] = useState<AppItem[]>([]),
-    [ready, setReady] = useState(false),
     [notice, setNotice] = useState("");
   useEffect(() => {
-    try {
-      setJobs(
-        JSON.parse(localStorage.getItem("jobz_jobs") || "null") || seedJobs,
-      );
-      setSaved(JSON.parse(localStorage.getItem("jobz_saved") || "[]"));
-      setApps(JSON.parse(localStorage.getItem("jobz_apps") || "[]"));
-    } catch {}
-    setReady(true);
-  }, []);
-  useEffect(() => {
-    if (ready) {
-      localStorage.setItem("jobz_jobs", JSON.stringify(jobs));
-      localStorage.setItem("jobz_saved", JSON.stringify(saved));
-      localStorage.setItem("jobz_apps", JSON.stringify(apps));
+    let current = true;
+
+    async function loadJobs() {
+      setJobsLoading(true);
+      setJobsError(null);
+      try {
+        const response = await fetch("/api/jobs?limit=100", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Could not load jobs.");
+        }
+        if (current) {
+          setJobs((result.jobs as ApiJob[]).map(toJob));
+          setJobTotal(Number(result.pagination?.total) || 0);
+        }
+      } catch (error) {
+        if (current) {
+          setJobsError(
+            error instanceof Error ? error.message : "Could not load jobs.",
+          );
+        }
+      } finally {
+        if (current) setJobsLoading(false);
+      }
     }
-  }, [jobs, saved, apps, ready]);
+
+    void loadJobs();
+    return () => {
+      current = false;
+    };
+  }, []);
   const toast = (msg: string) => {
     setNotice(msg);
     setTimeout(() => setNotice(""), 2600);
@@ -50,6 +70,9 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       jobs,
+      jobTotal,
+      jobsLoading,
+      jobsError,
       saved,
       apps,
       toggleSave: (id: string) => {
@@ -86,7 +109,7 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
       },
       toast,
     }),
-    [jobs, saved, apps],
+    [jobs, jobTotal, jobsLoading, jobsError, saved, apps],
   );
   return (
     <MotionConfig reducedMotion="user">
