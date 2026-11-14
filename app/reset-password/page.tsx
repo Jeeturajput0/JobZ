@@ -1,3 +1,6 @@
-import Link from 'next/link';
-import { AnimatedHeading } from '@/components/animations/AnimatedHeading';
-export default function Page(){return <main className="auth-form-wrap"><section className="auth-form"><Link className="back-link" href="/login">← Back to sign in</Link><div className="kicker">ALMOST THERE</div><AnimatedHeading as="h2">Choose a new password</AnimatedHeading><p>Make it something secure and easy to remember.</p><label className="input-label">New password<input className="input" type="password" placeholder="At least 8 characters"/></label><label className="input-label">Confirm password<input className="input" type="password" placeholder="Enter it once more"/></label><Link href="/login" className="btn btn-primary btn-wide">Save new password <span>→</span></Link></section></main>}
+import Link from "next/link";
+import { AnimatedHeading } from "@/components/animations/AnimatedHeading";
+
+export default function Page() {
+  return <main className="auth-form-wrap"><section className="auth-form"><Link className="back-link" href="/login">← Back to sign in</Link><div className="kicker">ACCOUNT ACCESS</div><AnimatedHeading as="h2">Password reset is unavailable</AnimatedHeading><p>Password reset links are not configured for this JobZ deployment.</p><Link href="/login" className="btn btn-primary btn-wide">Return to sign in</Link></section></main>;
+}

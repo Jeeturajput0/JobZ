@@ -111,7 +111,7 @@ export function Footer() {
           <b>JobZ</b>
           <Link href="/about">About us</Link>
           <Link href="/contact">Contact</Link>
-          <Link href="/login">Demo sign in</Link>
+          <Link href="/admin/login">Admin sign in</Link>
         </div>
       </div>
       <div className="footer-bottom">
@@ -541,22 +541,6 @@ export function JobsPage() {
                 ))}
               </select>
             </label>
-            <div className="filter-label">SALARY RANGE</div>
-            <div className="salary-range">
-              <input type="range" min="0" max="200" defaultValue="90" />
-              <div>
-                <span>$0k</span>
-                <span>$200k+</span>
-              </div>
-            </div>
-            <div className="filter-note">
-              <Sparkles size={16} />
-              <span>
-                <b>A little more you.</b>
-                <br />
-                Create a profile to get roles picked for you.
-              </span>
-            </div>
           </motion.aside>
           <section className="job-results">
             <div className="results-top">

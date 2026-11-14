@@ -19,7 +19,6 @@ type Ctx = {
   apps: AppItem[];
   toggleSave: (id: string) => void;
   apply: (job: Job) => void;
-  addJob: (job: Job) => void;
   toast: (msg: string) => void;
 };
 const Context = createContext<Ctx | null>(null);
@@ -63,6 +62,30 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
       current = false;
     };
   }, []);
+  useEffect(() => {
+    let current = true;
+    async function loadCandidateActivity() {
+      try {
+        const meResponse = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!meResponse.ok || (await meResponse.json()).user?.role !== "jobSeeker") return;
+        const [savedResponse, applicationsResponse] = await Promise.all([
+          fetch("/api/saved-jobs", { cache: "no-store" }),
+          fetch("/api/applications", { cache: "no-store" }),
+        ]);
+        if (!savedResponse.ok || !applicationsResponse.ok) return;
+        const [savedData, applicationsData] = await Promise.all([savedResponse.json(), applicationsResponse.json()]);
+        if (!current) return;
+        setSaved((savedData.savedJobs || []).map((item: { id: string }) => item.id));
+        setApps((applicationsData.applications || []).map((item: { _id: string; jobId?: { _id?: string; title?: string; companyId?: { companyName?: string } } | null; status: string; appliedAt: string }) => ({
+          id: item._id, jobId: item.jobId?._id || "", jobTitle: item.jobId?.title || "Unavailable job",
+          company: item.jobId?.companyId?.companyName || "Unavailable company", status: item.status,
+          date: new Date(item.appliedAt).toLocaleDateString(),
+        })));
+      } catch { /* Keep account activity empty when unavailable. */ }
+    }
+    void loadCandidateActivity();
+    return () => { current = false; };
+  }, []);
   const toast = (msg: string) => {
     setNotice(msg);
     setTimeout(() => setNotice(""), 2600);
@@ -75,37 +98,30 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
       jobsError,
       saved,
       apps,
-      toggleSave: (id: string) => {
-        setSaved((s) =>
-          s.includes(id) ? s.filter((x) => x !== id) : [...s, id],
-        );
-        toast(
-          saved.includes(id)
-            ? "Removed from saved jobs"
-            : "Job saved for later",
-        );
+      toggleSave: async (id: string) => {
+        const remove = saved.includes(id);
+        try {
+          const response = await fetch(remove ? `/api/saved-jobs?jobId=${encodeURIComponent(id)}` : "/api/saved-jobs", {
+            method: remove ? "DELETE" : "POST",
+            headers: remove ? undefined : { "Content-Type": "application/json" },
+            body: remove ? undefined : JSON.stringify({ jobId: id }),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.message || "Sign in as a job seeker to save jobs.");
+          setSaved((items) => remove ? items.filter((item) => item !== id) : items.includes(id) ? items : [...items, id]);
+          toast(remove ? "Removed from saved jobs" : "Job saved for later");
+        } catch (error) { toast(error instanceof Error ? error.message : "Could not update saved jobs."); }
       },
-      apply: (j: Job) => {
-        if (apps.some((a) => a.jobId === j.id)) {
-          toast("You’ve already applied to this role");
-          return;
-        }
-        setApps((a) => [
-          {
-            id: Date.now().toString(),
-            jobId: j.id,
-            jobTitle: j.title,
-            company: j.company,
-            status: "Pending",
-            date: new Date().toLocaleDateString(),
-          },
-          ...a,
-        ]);
-        toast("Application sent. Good luck!");
-      },
-      addJob: (j: Job) => {
-        setJobs((x) => [j, ...x]);
-        toast("Your job is now live");
+      apply: async (job: Job) => {
+        if (apps.some((item) => item.jobId === job.id)) { toast("You already applied to this role."); return; }
+        try {
+          const response = await fetch("/api/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: job.id }) });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.message || "Could not submit your application.");
+          const application = result.application;
+          setApps((items) => [{ id: application.id, jobId: job.id, jobTitle: job.title, company: job.company, status: application.status, date: new Date(application.appliedAt).toLocaleDateString() }, ...items]);
+          toast("Application submitted successfully.");
+        } catch (error) { toast(error instanceof Error ? error.message : "Could not submit your application."); }
       },
       toast,
     }),
