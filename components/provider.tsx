@@ -133,7 +133,7 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
       {children}
       <AnimatePresence>
       {notice && (
-        <motion.div className="toast motion-safe-enter" role="status" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}>
+        <motion.div className="toast [position:fixed] [z-index:30] [bottom:24px] [left:50%] [transform:translateX(-50%)] [background:#267653] [color:white] [padding:12px_18px] [border-radius:8px] [box-shadow:0_8px_25px_#1c315333] [font-size:14px] [line-height:1.5] motion-safe-enter [@media(scripting:none)]:[opacity:1!important] [@media(scripting:none)]:[filter:none!important] [@media(scripting:none)]:[transform:none!important]" role="status" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}>
           ✓ &nbsp;{notice}
         </motion.div>
       )}

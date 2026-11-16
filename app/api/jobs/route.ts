@@ -8,6 +8,7 @@ import Job from "@/models/Job";
 import User from "@/models/User";
 import EmployerProfile from "@/models/EmployerProfile";
 import { authorize } from "@/lib/authorize";
+import { replaceJobSkills, resolveLegacySkillNames, resolveSkillIds } from "@/lib/skills";
 
 const JOB_TYPES = ["full-time", "part-time", "internship", "contract"] as const;
 const WORK_MODES = ["onsite", "remote", "hybrid"] as const;
@@ -31,6 +32,28 @@ export async function GET(request: NextRequest) {
     const location = params.get("location")?.trim();
     const jobType = params.get("jobType");
     const workMode = params.get("workMode");
+    const experience = params.get("experience")?.trim();
+    const skills = params.get("skills")?.trim();
+    const salaryMin = Number(params.get("salaryMin"));
+    const salaryMax = Number(params.get("salaryMax"));
+    const sort = params.get("sort") || "recommended";
+    const companyId = params.get("companyId");
+
+    const sortOptions: Record<string, Record<string, 1 | -1>> = {
+      recommended: { isFeatured: -1, createdAt: -1 },
+      latest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+      salaryHigh: { maxSalary: -1, createdAt: -1 },
+      salaryLow: { minSalary: 1, createdAt: -1 },
+    };
+    if (!sortOptions[sort]) {
+      return NextResponse.json({ success: false, message: "Invalid sort order." }, { status: 400 });
+    }
+    if ((params.has("salaryMin") && (!Number.isFinite(salaryMin) || salaryMin < 0)) ||
+        (params.has("salaryMax") && (!Number.isFinite(salaryMax) || salaryMax < 0)) ||
+        (params.has("salaryMin") && params.has("salaryMax") && salaryMin > salaryMax)) {
+      return NextResponse.json({ success: false, message: "Invalid salary range." }, { status: 400 });
+    }
 
     if (jobType && !JOB_TYPES.includes(jobType as (typeof JOB_TYPES)[number])) {
       return NextResponse.json(
@@ -45,6 +68,9 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
+    if (companyId && !mongoose.Types.ObjectId.isValid(companyId)) {
+      return NextResponse.json({ success: false, message: "Invalid company." }, { status: 400 });
+    }
 
     const filter: Record<string, unknown> = {
       status: "active",
@@ -53,16 +79,24 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       const expression = new RegExp(escapeRegex(search), "i");
+      const matchingCompanies = await EmployerProfile.find({ companyName: expression }).distinct("_id");
       filter.$or = [
         { title: expression },
         { description: expression },
         { category: expression },
+        { skills: expression },
+        { companyId: { $in: matchingCompanies } },
       ];
     }
     if (category) filter.category = category;
+    if (companyId) filter.companyId = companyId;
     if (location) filter.location = new RegExp(escapeRegex(location), "i");
     if (jobType) filter.jobType = jobType;
     if (workMode) filter.workMode = workMode;
+    if (experience) filter.experienceLevel = new RegExp(escapeRegex(experience), "i");
+    if (skills) filter.skills = new RegExp(escapeRegex(skills), "i");
+    if (params.has("salaryMin")) filter.maxSalary = { $gte: salaryMin };
+    if (params.has("salaryMax")) filter.minSalary = { ...(filter.minSalary as object || {}), $lte: salaryMax };
 
     const [jobs, total] = await Promise.all([
       Job.find(filter)
@@ -70,7 +104,7 @@ export async function GET(request: NextRequest) {
           "companyId",
           "companyName companyLogo industry website location description",
         )
-        .sort({ createdAt: -1 })
+        .sort(sortOptions[sort])
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
@@ -115,6 +149,7 @@ export async function POST(request: NextRequest) {
       category,
       shortDescription,
       description,
+      skillIds,
       responsibilities,
       requirements,
       skills,
@@ -168,6 +203,20 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+    }
+
+    if (skillIds !== undefined && (!Array.isArray(skillIds) || !skillIds.every((item) => typeof item === "string"))) {
+      return NextResponse.json({ success: false, message: "skillIds must be an array of skill IDs." }, { status: 400 });
+    }
+    if (skillIds === undefined && Array.isArray(skills) && skills.length > 20) {
+      return NextResponse.json({ success: false, message: "Select up to 20 skills." }, { status: 400 });
+    }
+
+    let selectedSkills;
+    try {
+      selectedSkills = skillIds !== undefined ? await resolveSkillIds(skillIds) : await resolveLegacySkillNames(skills || []);
+    } catch (error) {
+      return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Please choose valid skills." }, { status: 400 });
     }
 
     // 4. Validate salary
@@ -264,7 +313,7 @@ export async function POST(request: NextRequest) {
       description: description.trim(),
       responsibilities: responsibilities || [],
       requirements: requirements || [],
-      skills: skills || [],
+      skills: selectedSkills.map((skill) => skill.name),
       jobType,
       workMode,
       experienceLevel: experienceLevel.trim(),
@@ -277,6 +326,8 @@ export async function POST(request: NextRequest) {
       approvalStatus: "pending",
       isFeatured: false,
     });
+
+    await replaceJobSkills(job._id, selectedSkills);
 
     return NextResponse.json(
       {

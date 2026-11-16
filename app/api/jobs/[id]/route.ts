@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import {connectDB} from "@/lib/mongodb";
 import Job from "@/models/Job";
 import { authorize } from "@/lib/authorize";
+import { replaceJobSkills, resolveLegacySkillNames } from "@/lib/skills";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -196,6 +197,15 @@ export async function PATCH(
 
   try {
     await connectDB();
+    let selectedSkills: Awaited<ReturnType<typeof resolveLegacySkillNames>> | undefined;
+    if ("skills" in input) {
+      try {
+        selectedSkills = await resolveLegacySkillNames(input.skills);
+        if (selectedSkills.length > 20) throw new Error("Select up to 20 skills.");
+      } catch (error) {
+        return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Please provide valid skills." }, { status: 400 });
+      }
+    }
     const job = await Job.findById(id);
     if (!job) {
       return NextResponse.json(
@@ -228,6 +238,7 @@ export async function PATCH(
       job.set(field, field === "applicationDeadline" && value ? new Date(value as string) : value);
     }
     await job.save();
+    if (selectedSkills) await replaceJobSkills(job._id, selectedSkills);
     await job.populate("companyId", "companyName companyLogo industry location website description");
 
     return NextResponse.json({

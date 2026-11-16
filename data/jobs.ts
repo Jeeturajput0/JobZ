@@ -1,8 +1,10 @@
 export interface Job {
   id: string;
+  companyId?: string;
   title: string;
   company: string;
   logo: string;
+  logoUrl?: string;
   color: string;
   location: string;
   salary: string;
@@ -16,7 +18,9 @@ export interface Job {
   description: string;
   responsibilities?: string[];
   requirements?: string[];
+  skills?: string[];
   benefits?: string[];
+  applicationDeadline?: string;
   experienceLevel?: string;
   companyDescription?: string;
 }
@@ -29,7 +33,9 @@ export interface ApiJob {
   description: string;
   responsibilities?: string[];
   requirements?: string[];
+  skills?: string[];
   benefits?: string[];
+  applicationDeadline?: string;
   jobType: string;
   workMode: string;
   experienceLevel?: string;
@@ -39,6 +45,7 @@ export interface ApiJob {
   isFeatured?: boolean;
   createdAt?: string;
   companyId?: {
+    _id?: string;
     companyName?: string;
     companyLogo?: string;
     description?: string;
@@ -83,10 +90,12 @@ export function toJob(record: ApiJob): Job {
 
   return {
     id: record._id,
+    companyId: typeof record.companyId === "object" && record.companyId ? record.companyId._id : undefined,
     title: record.title,
     company,
     logo: company.slice(0, 1).toUpperCase(),
-    color: "#4c73e6",
+    logoUrl: record.companyId?.companyLogo,
+    color: "#3FA47B",
     location: record.location,
     salary: formatSalary(record.minSalary, record.maxSalary),
     type: jobTypes[record.jobType] || record.jobType,
@@ -99,7 +108,9 @@ export function toJob(record: ApiJob): Job {
     description: record.description,
     responsibilities: record.responsibilities || [],
     requirements: record.requirements || [],
+    skills: record.skills || [],
     benefits: record.benefits || [],
+    applicationDeadline: record.applicationDeadline,
     experienceLevel: record.experienceLevel,
     companyDescription: record.companyId?.description,
   };

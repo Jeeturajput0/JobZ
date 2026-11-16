@@ -33,9 +33,9 @@ function splitWords(
 
       const wordIndex = state.wordIndex++;
       return (
-        <span className="motion-word-mask" key={`${path}-word-${index}`}>
+        <span className="motion-word-mask [display:inline-block] [overflow:hidden] [vertical-align:bottom] [padding-bottom:.08em] [margin-bottom:-.08em] [@media(scripting:none)]:[overflow:visible]" key={`${path}-word-${index}`}>
           <motion.span
-            className="motion-heading-word"
+            className="motion-heading-word [display:inline-block] [@media(scripting:none)]:[opacity:1!important] [@media(scripting:none)]:[filter:none!important] [@media(scripting:none)]:[transform:none!important]"
             custom={wordIndex}
             variants={{
               hidden: {
@@ -132,7 +132,7 @@ export function AnimatedHeading({
 
   return (
     <Heading
-      className={className ? `animated-heading ${className}` : "animated-heading"}
+      className={className ? `text-3xl font-semibold tracking-tight text-[#eff5f3] sm:text-4xl animated-heading [@media(scripting:none)]:[opacity:1!important] [@media(scripting:none)]:[filter:none!important] [@media(scripting:none)]:[transform:none!important] ${className}` : "text-3xl font-semibold tracking-tight text-[#e2ebe9] sm:text-4xl animated-heading [@media(scripting:none)]:[opacity:1!important] [@media(scripting:none)]:[filter:none!important] [@media(scripting:none)]:[transform:none!important]"}
       aria-label={textContent(children)}
       initial={animate ? "hidden" : false}
       whileInView={animate ? "visible" : undefined}
