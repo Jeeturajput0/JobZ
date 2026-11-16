@@ -9,6 +9,7 @@ export interface Job {
   type: string;
   mode: string;
   category: string;
+  shortDescription?: string;
   posted: string;
   createdAt?: string;
   featured?: boolean;
@@ -24,6 +25,7 @@ export interface ApiJob {
   _id: string;
   title: string;
   category: string;
+  shortDescription?: string;
   description: string;
   responsibilities?: string[];
   requirements?: string[];
@@ -90,6 +92,7 @@ export function toJob(record: ApiJob): Job {
     type: jobTypes[record.jobType] || record.jobType,
     mode: workModes[record.workMode] || record.workMode,
     category: record.category,
+    shortDescription: record.shortDescription?.trim() || record.description,
     posted: formatPostedDate(record.createdAt),
     createdAt: record.createdAt,
     featured: record.isFeatured,

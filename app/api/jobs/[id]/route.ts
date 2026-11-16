@@ -28,7 +28,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: RouteContext,
 ) {
-  const auth = authorize(request, ["admin"]);
+  const auth = authorize(request, ["admin", "employer"]);
   if (!auth.authorized) return auth.response;
 
   const { id } = await params;
@@ -60,6 +60,7 @@ export async function PATCH(
     "title",
     "slug",
     "category",
+    "shortDescription",
     "description",
     "responsibilities",
     "requirements",
@@ -89,6 +90,21 @@ export async function PATCH(
     );
   }
 
+  if (auth.user.role === "employer") {
+    const employerEditableFields = new Set([
+      "title", "category", "shortDescription", "description", "responsibilities",
+      "requirements", "skills", "jobType", "workMode", "experienceLevel",
+      "minSalary", "maxSalary", "location", "benefits", "applicationDeadline",
+    ]);
+    const restrictedFields = Object.keys(input).filter((field) => !employerEditableFields.has(field));
+    if (restrictedFields.length) {
+      return NextResponse.json(
+        { success: false, message: `Employers cannot update these fields: ${restrictedFields.join(", ")}.` },
+        { status: 403 },
+      );
+    }
+  }
+
   for (const field of ["title", "slug", "category", "description", "experienceLevel", "location"]) {
     if (field in input && (typeof input[field] !== "string" || !input[field].trim())) {
       return NextResponse.json(
@@ -96,6 +112,17 @@ export async function PATCH(
         { status: 400 },
       );
     }
+  }
+  if (
+    "shortDescription" in input &&
+    (typeof input.shortDescription !== "string" ||
+      !input.shortDescription.trim() ||
+      input.shortDescription.trim().length > 160)
+  ) {
+    return NextResponse.json(
+      { success: false, message: "shortDescription is required and must be 1–160 characters." },
+      { status: 400 },
+    );
   }
   if ("jobType" in input && !JOB_TYPES.includes(input.jobType as string)) {
     return NextResponse.json(
@@ -174,6 +201,13 @@ export async function PATCH(
       return NextResponse.json(
         { success: false, message: "Job not found." },
         { status: 404 },
+      );
+    }
+
+    if (auth.user.role === "employer" && job.employerId.toString() !== auth.user.userId) {
+      return NextResponse.json(
+        { success: false, message: "You cannot update this job." },
+        { status: 403 },
       );
     }
 

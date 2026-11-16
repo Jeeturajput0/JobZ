@@ -7,6 +7,7 @@ export interface IJob {
   title: string;
   slug: string;
   category: string;
+  shortDescription: string;
   description: string;
   responsibilities: string[];
   requirements: string[];
@@ -53,6 +54,17 @@ const JobSchema = new Schema<IJob>(
     category: {
       type: String,
       required: true,
+    },
+
+    shortDescription: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 160,
+      // Older records receive a concise fallback when hydrated and next saved.
+      default: function (this: IJob) {
+        return this.description?.trim().slice(0, 160) || undefined;
+      },
     },
 
     description: {

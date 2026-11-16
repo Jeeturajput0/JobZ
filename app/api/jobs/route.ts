@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
     const {
       title,
       category,
+      shortDescription,
       description,
       responsibilities,
       requirements,
@@ -135,6 +136,9 @@ export async function POST(request: NextRequest) {
       !title.trim() ||
       typeof category !== "string" ||
       !category.trim() ||
+      typeof shortDescription !== "string" ||
+      !shortDescription.trim() ||
+      shortDescription.trim().length > 160 ||
       typeof description !== "string" ||
       !description.trim() ||
       typeof location !== "string" ||
@@ -145,7 +149,7 @@ export async function POST(request: NextRequest) {
       !["onsite", "remote", "hybrid"].includes(workMode)
     ) {
       return NextResponse.json(
-        { success: false, message: "Please provide valid required job details." },
+        { success: false, message: "Please provide valid required job details. Short description must be 1–160 characters." },
         { status: 400 }
       );
     }
@@ -256,6 +260,7 @@ export async function POST(request: NextRequest) {
       title: title.trim(),
       slug,
       category: category.trim(),
+      shortDescription: shortDescription.trim(),
       description: description.trim(),
       responsibilities: responsibilities || [],
       requirements: requirements || [],

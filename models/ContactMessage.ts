@@ -21,7 +21,7 @@ const ContactMessageSchema = new Schema<IContactMessage>(
     topic: { type: String, required: true, trim: true, maxlength: 80 },
     message: { type: String, required: true, trim: true, maxlength: 5000 },
     status: { type: String, enum: ["new", "read", "closed"], default: "new" },
-  },
+  }, 
   { timestamps: true },
 );
 

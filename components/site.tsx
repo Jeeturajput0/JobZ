@@ -13,7 +13,6 @@ import {
   CircleHelp,
   Clock3,
   Compass,
-  FileText,
   Filter,
   Heart,
   MapPin,
@@ -89,11 +88,6 @@ export function Footer() {
             <br />
             Let’s find yours.
           </p>
-          <div className="socials">
-            <span>in</span>
-            <span>𝕏</span>
-            <span>◎</span>
-          </div>
         </div>
         <div>
           <b className="text-lg font-bold">For candidates</b>
@@ -377,7 +371,7 @@ export function JobCard({ id, job: custom, staggered = false }: { id?: string; j
   const j = custom || jobs.find((x) => x.id === id);
   if (!j) return null;
   return (
-    <motion.article className="job-card motion-safe-enter" variants={subtleReveal} {...(!staggered && { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.18 } })} whileHover={{ y: -3 }}>
+    <motion.article className="job-card flex flex-col motion-safe-enter" variants={subtleReveal} {...(!staggered && { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.18 } })} whileHover={{ y: -3 }}>
       <div className="job-card-top">
         <span className="company-logo" style={{ background: j.color }}>
           {j.logo}
@@ -402,12 +396,12 @@ export function JobCard({ id, job: custom, staggered = false }: { id?: string; j
         <span>·</span>
         {j.location}
       </div>
-      <p className="job-desc">{j.description}</p>
+      <p className="job-desc">{j.shortDescription || j.description}</p>
       <div className="job-tags">
         <span>{j.type}</span>
         <span>{j.mode}</span>
       </div>
-      <div className="job-card-bottom">
+      <div className="job-card-bottom mt-auto">
         <span className="salary">{j.salary}</span>
         <Link href={"/jobs/" + j.id} className="job-link">
           View role <ArrowRight size={15} />
@@ -595,7 +589,7 @@ export function JobsPage() {
                         <span>·</span>
                         {j.posted}
                       </div>
-                      <p>{j.description}</p>
+                      <p className="job-desc">{j.shortDescription || j.description}</p>
                       <div className="job-tags">
                         <span>{j.type}</span>
                         <span>{j.mode}</span>
@@ -658,6 +652,8 @@ export function JobDetail({ id }: { id: string }) {
   const [job, setJob] = useState<Job | null>(null);
   const [jobError, setJobError] = useState("");
   const [modal, setModal] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [resumeUrl, setResumeUrl] = useState("");
 
   useEffect(() => {
     let current = true;
@@ -847,15 +843,12 @@ export function JobDetail({ id }: { id: string }) {
               Applying for <b>{job.title}</b>. Add a quick note to introduce
               yourself.
             </p>
-            <textarea placeholder="A few words about why this role feels right for you…" />
-            <label className="upload-label">
-              <FileText /> Add a resume
-              <input type="file" accept=".pdf,.doc,.docx" />
-            </label>
+            <label className="input-label">Cover letter<textarea className="input" value={coverLetter} onChange={(event)=>setCoverLetter(event.target.value)} maxLength={10000} placeholder="Introduce yourself to the employer" /></label>
+            <label className="input-label">Resume URL (optional)<input className="input" type="url" value={resumeUrl} onChange={(event)=>setResumeUrl(event.target.value)} placeholder="https://…" /></label>
             <button
               className="btn btn-primary btn-wide"
               onClick={() => {
-                apply(job);
+                apply(job, { coverLetter, resumeUrl });
                 setModal(false);
               }}
             >

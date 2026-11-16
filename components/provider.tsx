@@ -18,7 +18,7 @@ type Ctx = {
   saved: string[];
   apps: AppItem[];
   toggleSave: (id: string) => void;
-  apply: (job: Job) => void;
+  apply: (job: Job, details?: { resumeUrl?: string; coverLetter?: string }) => void;
   toast: (msg: string) => void;
 };
 const Context = createContext<Ctx | null>(null);
@@ -112,10 +112,10 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
           toast(remove ? "Removed from saved jobs" : "Job saved for later");
         } catch (error) { toast(error instanceof Error ? error.message : "Could not update saved jobs."); }
       },
-      apply: async (job: Job) => {
+      apply: async (job: Job, details?: { resumeUrl?: string; coverLetter?: string }) => {
         if (apps.some((item) => item.jobId === job.id)) { toast("You already applied to this role."); return; }
         try {
-          const response = await fetch("/api/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: job.id }) });
+          const response = await fetch("/api/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId: job.id, resumeUrl: details?.resumeUrl || "", coverLetter: details?.coverLetter || "" }) });
           const result = await response.json();
           if (!response.ok) throw new Error(result.message || "Could not submit your application.");
           const application = result.application;

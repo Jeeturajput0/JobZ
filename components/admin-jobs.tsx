@@ -9,6 +9,7 @@ type AdminJob = {
   title: string;
   slug: string;
   category: string;
+  shortDescription?: string;
   description: string;
   responsibilities: string[];
   requirements: string[];
@@ -33,6 +34,7 @@ type JobForm = {
   title: string;
   slug: string;
   category: string;
+  shortDescription: string;
   description: string;
   responsibilities: string;
   requirements: string;
@@ -57,6 +59,7 @@ const emptyForm: JobForm = {
   title: "",
   slug: "",
   category: "",
+  shortDescription: "",
   description: "",
   responsibilities: "",
   requirements: "",
@@ -83,6 +86,7 @@ function toForm(job: AdminJob): JobForm {
     title: job.title,
     slug: job.slug,
     category: job.category,
+    shortDescription: job.shortDescription || job.description.slice(0, 160),
     description: job.description,
     responsibilities: listToText(job.responsibilities),
     requirements: listToText(job.requirements),
@@ -337,6 +341,7 @@ export function AdminJobsManager() {
                 <label>Slug<input className="input" required value={form.slug} onChange={(event) => updateForm("slug", event.target.value)} /></label>
                 <label>Company<input className="input" readOnly value={companyName(selectedJob)} /></label>
                 <label>Category<input className="input" required value={form.category} onChange={(event) => updateForm("category", event.target.value)} /></label>
+                <label className="full-field">Short description<textarea className="input" required rows={3} maxLength={160} value={form.shortDescription} onChange={(event) => updateForm("shortDescription", event.target.value)} /><small>{form.shortDescription.length}/160 characters</small></label>
                 <label>Job type<select className="input" value={form.jobType} onChange={(event) => updateForm("jobType", event.target.value)}>{[["full-time", "Full-time"], ["part-time", "Part-time"], ["internship", "Internship"], ["contract", "Contract"]].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
                 <label>Work mode<select className="input" value={form.workMode} onChange={(event) => updateForm("workMode", event.target.value)}>{[["onsite", "On-site"], ["remote", "Remote"], ["hybrid", "Hybrid"]].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
                 <label>Location<input className="input" required value={form.location} onChange={(event) => updateForm("location", event.target.value)} /></label>
