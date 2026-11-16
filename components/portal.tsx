@@ -50,6 +50,7 @@ import { useJobZ } from "./provider";
 import { JobCard } from "./site";
 import type { Job } from "@/data/jobs";
 import { AdminJobsManager } from "@/components/admin-jobs";
+import { HowJobZWorks } from "@/components/home/HomeSections";
 
 const links: Record<string, [string, string][]> = {
   seeker: [
@@ -877,6 +878,7 @@ export function AboutPage() {
             Because the right work can change everything.
           </p>
         </section>
+        <HowJobZWorks />
         <section className="about-values [max-width:1050px] [margin:0_auto] [padding:42px_30px_80px] [display:grid] [grid-template-columns:1fr_1fr] [gap:55px] [&>div]:[border-top:1px_solid_#e9edf2] [&>div]:[padding-top:18px] [&_span]:[font-size:14px] [&_span]:[letter-spacing:1.3px] [&_span]:[color:#328A66] [&_span]:[font-weight:600] [&_h2]:[font-size:clamp(28px,_3vw,_38px)] [&_h2]:[line-height:1.25] [&_h2]:[color:#2c405e] [&_h2]:[letter-spacing:-0.025em] [&_p]:[font-size:16px] [&_p]:[color:#8490a0] [&_p]:[line-height:1.65] max-[700px]:[grid-template-columns:1fr] max-[700px]:[gap:20px] max-[700px]:[padding:25px_22px_48px] [&_span]:[line-height:1.45] max-[700px]:[&_h2]:[font-size:clamp(28px,_3vw,_38px)]">
           <div>
             <span>OUR MISSION</span>

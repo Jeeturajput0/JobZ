@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useJobZ } from "@/components/provider";
 import type { HomeCategory, HomeCompany, HomeSkill } from "./HomeSections";
-import { CTASection, CategoriesSection, FeaturedJobs, HomeHero, TopCompanies, TrustedCompanies, WhyChooseJobZ } from "./HomeSections";
+import { CTASection, CategoriesSection, FeaturedJobs, HomeHero, HowJobZWorks, TopCompanies, TrustedCompanies, WhyChooseJobZ } from "./HomeSections";
 
 export function HomePage() {
   const { jobs, jobsLoading, jobsError } = useJobZ();
@@ -45,6 +45,7 @@ export function HomePage() {
     <TrustedCompanies companies={companies} />
     <CategoriesSection categories={categories.slice().sort((a, b) => b.count - a.count)} />
     <FeaturedJobs jobs={featuredJobs} loading={jobsLoading} error={jobsError} />
+    <HowJobZWorks />
     <TopCompanies companies={companies} loading={directoryLoading} error={directoryError} />
     <WhyChooseJobZ />
     <CTASection />
