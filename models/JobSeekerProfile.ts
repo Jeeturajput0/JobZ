@@ -3,6 +3,7 @@ import mongoose, { Schema, Model } from "mongoose";
 
 export interface IJobSeekerProfile {
   userId: mongoose.Types.ObjectId;
+  profileImage?: string;
   headline?: string;
   summary?: string;
   location?: string;
@@ -31,6 +32,11 @@ const JobSeekerProfileSchema =
         ref: "User",
         required: true,
         unique: true,
+      },
+
+      profileImage: {
+        type: String,
+        default: "",
       },
 
       headline: {

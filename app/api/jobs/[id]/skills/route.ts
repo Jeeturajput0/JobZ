@@ -16,7 +16,7 @@ async function findAuthorizedJob(id: string, request: NextRequest, roles: ("admi
   if (auth.user.role === "employer" && job.employerId.toString() !== auth.user.userId) {
     return { response: NextResponse.json({ success: false, message: "You cannot access this job's skills." }, { status: 403 }) } as const;
   }
-  if (auth.user.role === "jobSeeker" && (job.status !== "active" || job.approvalStatus !== "approved")) {
+  if (auth.user.role === "jobSeeker" && job.status !== "active") {
     return { response: NextResponse.json({ success: false, message: "Job not found." }, { status: 404 }) } as const;
   }
   return { auth, job } as const;

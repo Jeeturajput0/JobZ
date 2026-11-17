@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!mongoose.Types.ObjectId.isValid(id)) return { title: "Job details" };
   try {
     await connectDB();
-    const job = await Job.findOne({ _id: id, status: "active", approvalStatus: "approved" })
+    const job = await Job.findOne({ _id: id, status: "active" })
       .select("title shortDescription description location")
       .populate("companyId", "companyName")
       .lean();

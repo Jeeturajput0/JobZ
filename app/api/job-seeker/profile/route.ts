@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {connectDB} from "@/lib/mongodb";
 import JobSeekerProfile from "@/models/JobSeekerProfile";
 import { authorize } from "@/lib/authorize";
+import { isValidProfileImage } from "@/lib/profile-image";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -21,6 +22,7 @@ export async function PUT(request: NextRequest) {
 
     // 3. Allow only these profile fields
     const allowedFields = [
+      "profileImage",
       "headline",
       "summary",
       "location",
@@ -42,6 +44,7 @@ export async function PUT(request: NextRequest) {
 
     // 4. Validate basic field types
     const stringFields = [
+      "profileImage",
       "headline",
       "summary",
       "location",
@@ -60,6 +63,13 @@ export async function PUT(request: NextRequest) {
           { status: 400 }
         );
       }
+    }
+
+    if (typeof updateData.profileImage === "string" && !isValidProfileImage(updateData.profileImage)) {
+      return NextResponse.json(
+        { success: false, message: "Choose a valid PNG, JPEG, or WebP profile photo under 1 MB." },
+        { status: 400 },
+      );
     }
 
     if (

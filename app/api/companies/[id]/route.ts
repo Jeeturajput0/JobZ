@@ -13,7 +13,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     await connectDB();
     const [profile, jobCount] = await Promise.all([
       EmployerProfile.findById(id).select("companyName companyLogo industry location companySize description website socialLinks").lean(),
-      Job.countDocuments({ companyId: id, status: "active", approvalStatus: "approved" }),
+      Job.countDocuments({ companyId: id, status: "active" }),
     ]);
     if (!profile) return NextResponse.json({ success: false, message: "Company not found." }, { status: 404 });
     return NextResponse.json({ success: true, company: {

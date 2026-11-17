@@ -123,13 +123,13 @@ const JobSchema = new Schema<IJob>(
     status: {
       type: String,
       enum: ["draft", "active", "inactive", "closed"],
-      default: "draft",
+      default: "active",
     },
 
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "pending",
+      default: "approved",
     },
 
     isFeatured: {

@@ -9,7 +9,7 @@ export async function GET() {
     const [profiles, counts] = await Promise.all([
       EmployerProfile.find({}).select("companyName companyLogo industry location companySize description website socialLinks").sort({ companyName: 1 }).lean(),
       Job.aggregate([
-        { $match: { status: "active", approvalStatus: "approved" } },
+        { $match: { status: "active" } },
         { $group: { _id: "$companyId", count: { $sum: 1 } } },
       ]),
     ]);

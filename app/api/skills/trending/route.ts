@@ -5,7 +5,7 @@ import Job from "@/models/Job";
 export async function GET() {
   try {
     await connectDB();
-    const jobs = await Job.find({ status: "active", approvalStatus: "approved" }).select("skills").lean();
+    const jobs = await Job.find({ status: "active" }).select("skills").lean();
     const counts = new Map<string, number>();
     for (const job of jobs) {
       for (const skill of job.skills || []) {

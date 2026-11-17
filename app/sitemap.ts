@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     await connectDB();
     const [jobs, companies] = await Promise.all([
-      Job.find({ status: "active", approvalStatus: "approved" }).select("_id updatedAt").lean(),
+      Job.find({ status: "active" }).select("_id updatedAt").lean(),
       EmployerProfile.find({}).select("_id updatedAt").lean(),
     ]);
     return [

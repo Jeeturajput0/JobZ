@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
 
     const filter: Record<string, unknown> = {
       status: "active",
-      approvalStatus: "approved",
     };
 
     if (search) {
@@ -322,8 +321,8 @@ export async function POST(request: NextRequest) {
       location: location.trim(),
       benefits: benefits || [],
       applicationDeadline,
-      status: "draft",
-      approvalStatus: "pending",
+      status: "active",
+      approvalStatus: "approved",
       isFeatured: false,
     });
 
@@ -332,7 +331,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "Job created successfully and is awaiting approval.",
+        message: "Job created successfully and is now live.",
         job,
       },
       { status: 201 }

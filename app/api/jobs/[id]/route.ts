@@ -13,8 +13,6 @@ interface RouteContext {
 
 const JOB_TYPES = ["full-time", "part-time", "internship", "contract"];
 const WORK_MODES = ["onsite", "remote", "hybrid"];
-const JOB_STATUSES = ["draft", "active", "inactive", "closed"];
-const APPROVAL_STATUSES = ["pending", "approved", "rejected"];
 
 function isDuplicateKeyError(error: unknown): boolean {
   return (
@@ -74,8 +72,6 @@ export async function PATCH(
     "location",
     "benefits",
     "applicationDeadline",
-    "status",
-    "approvalStatus",
     "isFeatured",
   ];
   const unknownFields = Object.keys(input).filter(
@@ -134,21 +130,6 @@ export async function PATCH(
   if ("workMode" in input && !WORK_MODES.includes(input.workMode as string)) {
     return NextResponse.json(
       { success: false, message: "Invalid work mode." },
-      { status: 400 },
-    );
-  }
-  if ("status" in input && !JOB_STATUSES.includes(input.status as string)) {
-    return NextResponse.json(
-      { success: false, message: "Invalid job status." },
-      { status: 400 },
-    );
-  }
-  if (
-    "approvalStatus" in input &&
-    !APPROVAL_STATUSES.includes(input.approvalStatus as string)
-  ) {
-    return NextResponse.json(
-      { success: false, message: "Invalid approval status." },
       { status: 400 },
     );
   }
@@ -287,7 +268,6 @@ export async function GET(
     const job = await Job.findOne({
       _id: id,
       status: "active",
-      approvalStatus: "approved",
     })
       .populate(
         "companyId",

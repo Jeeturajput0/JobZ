@@ -23,7 +23,7 @@ type AdminJob = {
   benefits: string[];
   applicationDeadline?: string | null;
   status: string;
-  approvalStatus: string;
+
   isFeatured: boolean;
   createdAt?: string;
   companyId?: { _id: string; companyName?: string } | string | null;
@@ -47,8 +47,7 @@ type JobForm = {
   location: string;
   benefits: string;
   applicationDeadline: string;
-  status: string;
-  approvalStatus: string;
+
   isFeatured: boolean;
 };
 
@@ -72,8 +71,8 @@ const emptyForm: JobForm = {
   location: "",
   benefits: "",
   applicationDeadline: "",
-  status: "draft",
-  approvalStatus: "pending",
+
+
   isFeatured: false,
 };
 
@@ -99,8 +98,8 @@ function toForm(job: AdminJob): JobForm {
     location: job.location,
     benefits: listToText(job.benefits),
     applicationDeadline: job.applicationDeadline?.slice(0, 10) ?? "",
-    status: job.status,
-    approvalStatus: job.approvalStatus,
+
+
     isFeatured: job.isFeatured,
   };
 }
@@ -317,7 +316,7 @@ export function AdminJobsManager() {
                 <div><dt>Location</dt><dd>{selectedJob.location}</dd></div>
                 <div><dt>Salary</dt><dd>{formatSalary(selectedJob)}</dd></div>
                 <div><dt>Experience level</dt><dd>{selectedJob.experienceLevel}</dd></div>
-                <div><dt>Status</dt><dd>{displayEnum(selectedJob.status)} · {displayEnum(selectedJob.approvalStatus)}</dd></div>
+                <div><dt>Status</dt><dd>{displayEnum(selectedJob.status)}</dd></div>
                 <div className="admin-job-detail-full [grid-column:1/-1] max-[700px]:[grid-column:auto]"><dt>Description</dt><dd>{selectedJob.description}</dd></div>
                 <div className="admin-job-detail-full [grid-column:1/-1] max-[700px]:[grid-column:auto]"><dt>Required skills</dt><dd>{selectedJob.skills.length ? selectedJob.skills.join(", ") : "No skills listed"}</dd></div>
                 <div className="admin-job-detail-full [grid-column:1/-1] max-[700px]:[grid-column:auto]"><dt>Responsibilities</dt><dd>{selectedJob.responsibilities.length ? selectedJob.responsibilities.join(" · ") : "Not specified"}</dd></div>
@@ -349,8 +348,8 @@ export function AdminJobsManager() {
                 <label className="grid gap-2 text-sm font-medium text-[#172B25]">Minimum salary<input className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" type="number" min="0" step="1" value={form.minSalary} onChange={(event) => updateForm("minSalary", event.target.value)} /></label>
                 <label className="grid gap-2 text-sm font-medium text-[#172B25]">Maximum salary<input className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" type="number" min="0" step="1" value={form.maxSalary} onChange={(event) => updateForm("maxSalary", event.target.value)} /></label>
                 <label className="grid gap-2 text-sm font-medium text-[#172B25]">Application deadline<input className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" type="date" value={form.applicationDeadline} onChange={(event) => updateForm("applicationDeadline", event.target.value)} /></label>
-                <label className="grid gap-2 text-sm font-medium text-[#172B25]">Job status<select className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" value={form.status} onChange={(event) => updateForm("status", event.target.value)}>{["draft", "active", "inactive", "closed"].map((value) => <option key={value} value={value}>{displayEnum(value)}</option>)}</select></label>
-                <label className="grid gap-2 text-sm font-medium text-[#172B25]">Approval status<select className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" value={form.approvalStatus} onChange={(event) => updateForm("approvalStatus", event.target.value)}>{["pending", "approved", "rejected"].map((value) => <option key={value} value={value}>{displayEnum(value)}</option>)}</select></label>
+
+
                 <label className="full-field [grid-column:1/-1] max-[700px]:[grid-column:auto]">Description<textarea className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" required rows={5} value={form.description} onChange={(event) => updateForm("description", event.target.value)} /></label>
                 <label className="full-field [grid-column:1/-1] max-[700px]:[grid-column:auto]">Required skills <small>One item per line</small><textarea className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" rows={3} value={form.skills} onChange={(event) => updateForm("skills", event.target.value)} /></label>
                 <label className="full-field [grid-column:1/-1] max-[700px]:[grid-column:auto]">Responsibilities <small>One item per line</small><textarea className="input [height:42px] [width:100%] [border:1px_solid_#e2e7ed] [border-radius:.5rem] [padding:0_11px] [color:#34445a] [background:white] [font-size:14px] [font-weight:400] [&_::placeholder]:[color:#a0a9b6] [&_:focus]:[border-color:#3FA47B] [&_:focus]:[outline:3px_solid_#e8ecff] [.form-grid_&]:[font-size:.875rem] [.add-category_&]:[max-width:400px] max-[700px]:[.add-category_&]:[max-width:none] max-[700px]:[transition:border-color_180ms_ease-out,_box-shadow_180ms_ease-out] [.admin-job-edit-form_&]:[font-size:.875rem] [.admin-job-edit-form_&]:[height:auto] [.admin-job-edit-form_&]:[min-height:78px] [.admin-job-edit-form_&]:[padding:10px] [.admin-job-edit-form_&]:[resize:vertical] [min-height:44px] [border-color:#E5ECE8] [body_.form-grid_&]:[font-size:14px] [body_.admin-job-edit-form_&]:[font-size:14px] [&_:focus]:[outline-color:#3FA47B] [&_:focus]:[box-shadow:0_0_0_3px_rgb(63_164_123_/_14%)]" rows={3} value={form.responsibilities} onChange={(event) => updateForm("responsibilities", event.target.value)} /></label>

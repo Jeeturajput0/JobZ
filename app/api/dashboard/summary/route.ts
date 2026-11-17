@@ -13,24 +13,24 @@ export async function GET(request: NextRequest) {
   await connectDB();
   const userId = auth.user.userId;
   if (auth.user.role === "admin") {
-    const [members, seekers, employers, activeJobs, pendingJobs, applications] = await Promise.all([
+    const [members, seekers, employers, activeJobs, applications] = await Promise.all([
       User.countDocuments({ status: "active" }), User.countDocuments({ role: "jobSeeker", status: "active" }),
-      User.countDocuments({ role: "employer", status: "active" }), Job.countDocuments({ status: "active", approvalStatus: "approved" }),
-      Job.countDocuments({ approvalStatus: "pending" }), Application.countDocuments({}),
+      User.countDocuments({ role: "employer", status: "active" }), Job.countDocuments({ status: "active" }),
+      Application.countDocuments({}),
     ]);
-    return NextResponse.json({ success: true, summary: { members, seekers, employers, activeJobs, pendingJobs, applications } });
+    return NextResponse.json({ success: true, summary: { members, seekers, employers, activeJobs, applications } });
   }
   if (auth.user.role === "employer") {
-    const [jobs, activeJobs, pendingJobs, applications] = await Promise.all([
-      Job.countDocuments({ employerId: userId }), Job.countDocuments({ employerId: userId, status: "active", approvalStatus: "approved" }),
-      Job.countDocuments({ employerId: userId, approvalStatus: "pending" }), Application.countDocuments({ employerId: userId }),
+    const [jobs, activeJobs, applications] = await Promise.all([
+      Job.countDocuments({ employerId: userId }), Job.countDocuments({ employerId: userId, status: "active" }),
+      Application.countDocuments({ employerId: userId }),
     ]);
     const profile = await EmployerProfile.findOne({ userId }).select("companyName").lean();
-    return NextResponse.json({ success: true, summary: { jobs, activeJobs, pendingJobs, applications, companyName: profile?.companyName || "" } });
+    return NextResponse.json({ success: true, summary: { jobs, activeJobs, applications, companyName: profile?.companyName || "" } });
   }
   const [applications, saved, activeJobs] = await Promise.all([
     Application.countDocuments({ jobSeekerId: userId }), SavedJob.countDocuments({ jobSeekerId: userId }),
-    Job.countDocuments({ status: "active", approvalStatus: "approved" }),
+    Job.countDocuments({ status: "active" }),
   ]);
   return NextResponse.json({ success: true, summary: { applications, saved, activeJobs } });
 }

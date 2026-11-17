@@ -178,7 +178,6 @@ export async function POST(request: NextRequest) {
     const job = await Job.findOne({
       _id: new mongoose.Types.ObjectId(body.jobId),
       status: "active",
-      approvalStatus: "approved",
     }).select("_id employerId");
 
     if (!job) {

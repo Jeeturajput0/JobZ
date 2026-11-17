@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {connectDB} from "@/lib/mongodb";
 import EmployerProfile from "@/models/EmployerProfile";
 import { authorize } from "@/lib/authorize";
+import { isValidProfileImage } from "@/lib/profile-image";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -69,6 +70,13 @@ export async function PUT(request: NextRequest) {
             ? body[field].trim()
             : body[field];
       }
+    }
+
+    if (typeof updateData.companyLogo === "string" && !isValidProfileImage(updateData.companyLogo)) {
+      return NextResponse.json(
+        { success: false, message: "Choose a valid PNG, JPEG, or WebP logo under 1 MB." },
+        { status: 400 },
+      );
     }
 
     // 5. Validate social links

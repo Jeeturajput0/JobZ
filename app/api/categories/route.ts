@@ -10,7 +10,7 @@ export async function GET() {
     await connectDB();
     const [categories, counts] = await Promise.all([
       Category.find({ status: "active" }).sort({ name: 1 }).lean(),
-      Job.aggregate([{ $match: { status: "active", approvalStatus: "approved" } }, { $group: { _id: "$category", count: { $sum: 1 } } }]),
+      Job.aggregate([{ $match: { status: "active" } }, { $group: { _id: "$category", count: { $sum: 1 } } }]),
     ]);
     const countByName = new Map(counts.map((item) => [String(item._id).toLowerCase(), item.count as number]));
     return NextResponse.json({ success: true, categories: categories.map((item) => ({ id: String(item._id), name: item.name, slug: item.slug, count: countByName.get(item.name.toLowerCase()) || 0 })) });
