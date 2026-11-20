@@ -23,6 +23,8 @@ export interface IJob {
   status: "draft" | "active" | "inactive" | "closed";
   approvalStatus: "pending" | "approved" | "rejected";
   isFeatured: boolean;
+  reviewedBy?: mongoose.Types.ObjectId;
+  reviewedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -132,6 +134,19 @@ const JobSchema = new Schema<IJob>(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "approved",
+    },
+
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      select: false,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+      select: false,
     },
 
     isFeatured: {

@@ -491,32 +491,16 @@ export function AuthPage({ kind }: { kind: string }) {
             <a>Privacy Policy</a>.
           </small>
           <p className="auth-switch [text-align:center!important] [margin:21px_0_0!important] [color:#7e8999!important] [font-size:14px] [line-height:1.5]">
-            {adminSignup
-              ? "Already have an admin account?"
-              : adminLogin
-                ? "Need an admin account?"
-                : signup
-                  ? "Already have an account?"
-                  : "New to JobZ?"}{" "}
-            <Link
-              href={
-                adminSignup
-                  ? "/admin/login"
-                  : adminLogin
-                    ? "/admin/register"
-                    : signup
-                      ? "/login"
-                      : "/register"
-              }
-            >
-              {adminSignup
-                ? "Admin sign in"
-                : adminLogin
-                  ? "Register admin"
-                  : signup
-                    ? "Sign in"
-                    : "Create an account"}
-            </Link>
+            {adminLogin ? (
+              "Administrator accounts are provisioned by the platform owner."
+            ) : (
+              <>
+                {adminSignup ? "Already have an admin account?" : signup ? "Already have an account?" : "New to JobZ?"}{" "}
+                <Link href={adminSignup ? "/admin/login" : signup ? "/login" : "/register"}>
+                  {adminSignup ? "Admin sign in" : signup ? "Sign in" : "Create an account"}
+                </Link>
+              </>
+            )}
           </p>
         </form>
       </section>

@@ -23,6 +23,7 @@ type AdminJob = {
   benefits: string[];
   applicationDeadline?: string | null;
   status: string;
+  approvalStatus: "pending" | "approved" | "rejected";
 
   isFeatured: boolean;
   createdAt?: string;
@@ -143,6 +144,7 @@ export function AdminJobsManager() {
   const [form, setForm] = useState<JobForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [approvalSaving, setApprovalSaving] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
 
   const loadJobs = useCallback(async () => {
@@ -240,6 +242,26 @@ export function AdminJobsManager() {
     }
   }
 
+  async function updateApproval(job: AdminJob, approvalStatus: AdminJob["approvalStatus"]) {
+    setApprovalSaving(job._id);
+    try {
+      const response = await fetch(`/api/jobs/${job._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approvalStatus }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Could not update review status.");
+      const updated = result.job as AdminJob;
+      setJobs((current) => current.map((item) => item._id === updated._id ? { ...item, ...updated } : item));
+      toast(`Job ${approvalStatus}.`);
+    } catch (error) {
+      toast(`Error: ${error instanceof Error ? error.message : "Could not update review status."}`);
+    } finally {
+      setApprovalSaving(null);
+    }
+  }
+
   function closeModal() {
     if (saving || deleting) return;
     setModal(null);
@@ -265,18 +287,19 @@ export function AdminJobsManager() {
         <div className="empty-state [padding:55px_20px] [text-align:center] [border:1px_dashed_#dfe4ea] [border-radius:.75rem] [color:#7c899b] [&>svg]:[color:#3FA47B] [&_h3]:[color:#34455d] [&_h3]:[margin:12px_0_5px] [&_p]:[font-size:16px] [&_p]:[margin-bottom:17px] [&_p]:[line-height:1.65] [&_h3]:[font-size:21px] [&_h3]:[line-height:1.35] [.admin-jobs-panel_&]:[margin-top:12px] [background:#fbfcfe]">No job listings found.</div>
       ) : (
         <div className="scroll-table [overflow:auto]">
-          <div className="admin-job-row [display:grid] [grid-template-columns:minmax(150px,1.5fr)_minmax(130px,1fr)_minmax(100px,.8fr)_minmax(95px,.8fr)_minmax(120px,1fr)_minmax(90px,.7fr)_112px] [gap:10px] [align-items:center] [min-width:940px] [padding:12px_8px] [border-bottom:1px_solid_#f0f2f5] [color:#657286] [font-size:11px] admin-job-head [font-size:9px] [letter-spacing:.6px] [color:#99a2ae]">
+          <div className="admin-job-row [display:grid] [grid-template-columns:minmax(150px,1.5fr)_minmax(130px,1fr)_minmax(100px,.8fr)_minmax(95px,.8fr)_minmax(120px,1fr)_minmax(90px,.7fr)_130px_112px] [gap:10px] [align-items:center] [min-width:1080px] [padding:12px_8px] [border-bottom:1px_solid_#f0f2f5] [color:#657286] [font-size:11px] admin-job-head [font-size:9px] [letter-spacing:.6px] [color:#99a2ae]">
             <span>JOB TITLE</span><span>COMPANY</span><span>CATEGORY</span>
-            <span>TYPE</span><span>LOCATION</span><span>STATUS</span><span>ACTIONS</span>
+            <span>TYPE</span><span>LOCATION</span><span>STATUS</span><span>REVIEW</span><span>ACTIONS</span>
           </div>
           {jobs.map((job) => (
-            <div className="admin-job-row [display:grid] [grid-template-columns:minmax(150px,1.5fr)_minmax(130px,1fr)_minmax(100px,.8fr)_minmax(95px,.8fr)_minmax(120px,1fr)_minmax(90px,.7fr)_112px] [gap:10px] [align-items:center] [min-width:940px] [padding:12px_8px] [border-bottom:1px_solid_#f0f2f5] [color:#657286] [font-size:11px]" key={job._id}>
+            <div className="admin-job-row [display:grid] [grid-template-columns:minmax(150px,1.5fr)_minmax(130px,1fr)_minmax(100px,.8fr)_minmax(95px,.8fr)_minmax(120px,1fr)_minmax(90px,.7fr)_130px_112px] [gap:10px] [align-items:center] [min-width:1080px] [padding:12px_8px] [border-bottom:1px_solid_#f0f2f5] [color:#657286] [font-size:11px]" key={job._id}>
               <span className="admin-job-title [font-weight:600] [color:#394d68]">{job.title}</span>
               <span>{companyName(job)}</span>
               <span>{job.category}</span>
               <span>{displayEnum(job.jobType)}</span>
               <span>{job.location}</span>
               <span><i className="status-pill [font-style:normal] [background:#eff7f2] [color:#328460] [border-radius:10px] [padding:4px_8px] [font-size:14px] [line-height:1.35]">{displayEnum(job.status)}</i></span>
+              <span><select aria-label={`Review status for ${job.title}`} value={job.approvalStatus || "pending"} disabled={approvalSaving === job._id} onChange={(event) => void updateApproval(job, event.target.value as AdminJob["approvalStatus"])} className="[max-width:130px] [border:1px_solid_#dce7e1] [border-radius:6px] [background:#fff] [padding:6px] [color:#34455d]">{["pending", "approved", "rejected"].map((status) => <option key={status} value={status}>{displayEnum(status)}</option>)}</select></span>
               <span className="admin-job-actions [display:flex] [align-items:center] [gap:2px]">
                 <button className="icon-btn [display:grid] [place-items:center] [background:transparent] [border:0] [color:#5c6a7e] [padding:8px] [border-radius:8px] [&_:hover]:[color:#267653] admin-job-action [width:32px] [height:32px] [color:#328A66] [&_:hover]:[background:#EAF5F0] [&_:hover]:[color:#267653]" title="View job" aria-label={`View ${job.title}`} onClick={() => openModal(job, "view")}>
                   <Eye size={17} />

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import EmployerProfile from "@/models/EmployerProfile";
 import Job from "@/models/Job";
+import { publicJobFilter } from "@/lib/public-jobs";
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     const [profiles, counts] = await Promise.all([
       EmployerProfile.find({}).select("companyName companyLogo industry location companySize description website socialLinks").sort({ companyName: 1 }).lean(),
       Job.aggregate([
-        { $match: { status: "active" } },
+        { $match: publicJobFilter() },
         { $group: { _id: "$companyId", count: { $sum: 1 } } },
       ]),
     ]);

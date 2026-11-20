@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { toJob, type ApiJob, type Job } from "@/data/jobs";
 type AppItem = {
@@ -15,6 +15,7 @@ type Ctx = {
   jobTotal: number;
   jobsLoading: boolean;
   jobsError: string | null;
+  refreshJobs: () => Promise<void>;
   saved: string[];
   apps: AppItem[];
   toggleSave: (id: string) => void;
@@ -30,38 +31,59 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
     [saved, setSaved] = useState<string[]>([]),
     [apps, setApps] = useState<AppItem[]>([]),
     [notice, setNotice] = useState("");
+  const fetchJobs = useCallback(async () => {
+    const response = await fetch("/api/jobs?limit=100", { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Could not load jobs.");
+    }
+    return {
+      jobs: (result.jobs as ApiJob[]).map(toJob),
+      total: Number(result.pagination?.total) || 0,
+    };
+  }, []);
+
+  const refreshJobs = useCallback(async () => {
+    setJobsLoading(true);
+    setJobsError(null);
+    try {
+      const { jobs: nextJobs, total } = await fetchJobs();
+      setJobs(nextJobs);
+      setJobTotal(total);
+    } catch (error) {
+      setJobsError(
+        error instanceof Error ? error.message : "Could not load jobs.",
+      );
+    } finally {
+      setJobsLoading(false);
+    }
+  }, [fetchJobs]);
+
   useEffect(() => {
     let current = true;
-
-    async function loadJobs() {
-      setJobsLoading(true);
-      setJobsError(null);
-      try {
-        const response = await fetch("/api/jobs?limit=100", { cache: "no-store" });
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || "Could not load jobs.");
-        }
+    setJobsLoading(true);
+    setJobsError(null);
+    fetchJobs()
+      .then(({ jobs: nextJobs, total }) => {
         if (current) {
-          setJobs((result.jobs as ApiJob[]).map(toJob));
-          setJobTotal(Number(result.pagination?.total) || 0);
+          setJobs(nextJobs);
+          setJobTotal(total);
         }
-      } catch (error) {
+      })
+      .catch((error) => {
         if (current) {
           setJobsError(
             error instanceof Error ? error.message : "Could not load jobs.",
           );
         }
-      } finally {
+      })
+      .finally(() => {
         if (current) setJobsLoading(false);
-      }
-    }
-
-    void loadJobs();
+      });
     return () => {
       current = false;
     };
-  }, []);
+  }, [fetchJobs]);
   useEffect(() => {
     let current = true;
     async function loadCandidateActivity() {
@@ -96,6 +118,7 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
       jobTotal,
       jobsLoading,
       jobsError,
+      refreshJobs,
       saved,
       apps,
       toggleSave: async (id: string) => {
@@ -125,7 +148,7 @@ export function JobZProvider({ children }: { children: React.ReactNode }) {
       },
       toast,
     }),
-    [jobs, jobTotal, jobsLoading, jobsError, saved, apps],
+    [jobs, jobTotal, jobsLoading, jobsError, refreshJobs, saved, apps],
   );
   return (
     <MotionConfig reducedMotion="user">

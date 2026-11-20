@@ -3,13 +3,14 @@ import mongoose from "mongoose";
 import Job from "@/models/Job";
 import { connectDB } from "@/lib/mongodb";
 import { JobDetail } from "@/components/site";
+import { publicJobFilter } from "@/lib/public-jobs";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   if (!mongoose.Types.ObjectId.isValid(id)) return { title: "Job details" };
   try {
     await connectDB();
-    const job = await Job.findOne({ _id: id, status: "active" })
+    const job = await Job.findOne({ _id: id, ...publicJobFilter() })
       .select("title shortDescription description location")
       .populate("companyId", "companyName")
       .lean();

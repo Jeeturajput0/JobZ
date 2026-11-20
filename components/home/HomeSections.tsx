@@ -86,7 +86,7 @@ function CompanyMark({
 
 export function HomeHero({ skills }: { skills: HomeSkill[] }) {
   return (
-    <section className="relative mx-auto grid min-h-[340px] max-w-7xl items-center overflow-hidden px-5 pb-7 pt-8 sm:px-8 lg:min-h-[344px] lg:grid-cols-[1.12fr_.88fr] lg:gap-4 lg:px-11 lg:py-0">
+    <section className="relative mx-auto grid min-h-[340px] max-w-7xl items-center overflow-hidden px-5 pb-10 pt-8 sm:px-8 lg:min-h-[344px] lg:grid-cols-[1.12fr_.88fr] lg:gap-4 lg:px-11 lg:py-4">
       <div className="relative z-20 max-w-[590px] py-3 lg:py-7">
         <div className="inline-flex items-center gap-2 rounded-full bg-[#EAF5F0] px-4 py-2 text-xs font-medium text-[#172B25] sm:text-sm">
           <span className="size-2 rounded-full bg-[#3FA47B]" />A better way to
@@ -226,17 +226,9 @@ export function TrustedCompanies({ companies }: { companies: HomeCompany[] }) {
       aria-label="Companies hiring on JobZ"
       className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-11"
     >
-      <div className="mb-3">
-        <h2 className="text-base text-2xl font-semibold tracking-tight text-[#111827]">
-          Explore companies on JobZ
-        </h2>
-        <p className="mt-1 text-[13px] leading-5 text-[#64748B]">
-          Learn about employers in our directory and see their current openings
-          when available.
-        </p>
-      </div>
+    
      
-<div className="grid min-h-[100px] grid-cols-2 items-center gap-4 rounded-xl border border-[#E5E7EB] bg-white px-5 py-5 shadow-[0_4px_14px_rgba(17,24,39,.05)] sm:grid-cols-3 lg:grid-cols-6">
+<div className="grid min-h-[100px] grid-cols-2 items-center gap-4 rounded-xl px-5 py-5 shadow-[0_4px_14px_rgba(17,24,39,.05)] sm:grid-cols-3 lg:grid-cols-6">
   {companies.slice(0, 6).map((company) => (
     <div
       key={company.id}
@@ -310,46 +302,53 @@ function SectionHeading({
   );
 }
 
-
 export function HowJobZWorks() {
   const steps = [
     {
       number: "01",
       title: "Create Your Account",
       description:
-        "Sign up on JobZ and build your professional profile. Add your skills, qualifications, experience, and career preferences to help employers discover you.",
+        "Sign up and create your profile with skills, experience, and career details.",
       icon: UserRoundPlus,
       href: "/register",
-      action: "Create free account",
+      action: "Join JobZ",
     },
     {
       number: "02",
-      title: "Discover the Right Jobs",
+      title: "Explore Opportunities",
       description:
-        "Explore thousands of opportunities and find roles that match your interests. Filter jobs by location, experience, salary, and job type.",
+        "Discover jobs that match your skills, interests, location, and career goals.",
       icon: Search,
       href: "/jobs",
-      action: "Explore opportunities",
+      action: "Explore jobs",
     },
     {
       number: "03",
-      title: "Apply & Move Forward",
+      title: "Apply for Jobs",
       description:
-        "Find a role that matches your goals, review the requirements, and submit your application. Take the next step towards your dream career.",
+        "Choose the right role and submit your application to potential employers.",
       icon: BriefcaseBusiness,
       href: "/jobs",
-      action: "Find your next job",
+      action: "Apply now",
+    },
+    {
+      number: "04",
+      title: "Grow Your Career",
+      description:
+        "Track your applications, connect with employers, and move forward professionally.",
+      icon: TrendingUp,
+      href: "/dashboard/job-seeker",
+      action: "Build your future",
     },
   ];
 
   return (
     <section
       aria-labelledby="how-jobz-works-title"
-      className="bg-[#F7FAF8] py-14 sm:py-16 lg:py-20"
+      className="bg-[#F7FAF8] py-5 sm:py-16 lg:py-10"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-11">
-
-        {/* Section Heading */}
+        {/* Heading */}
         <div className="mx-auto max-w-2xl text-center">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#D6EDE1] bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[.12em] text-[#238D62]">
             <span className="size-1.5 rounded-full bg-[#238D62]" />
@@ -360,65 +359,60 @@ export function HowJobZWorks() {
             id="how-jobz-works-title"
             className="text-2xl font-bold leading-tight tracking-[-.04em] text-[#172B25] sm:text-3xl lg:text-[36px]"
           >
-            Your next career move starts here
+            Start your job journey in 4 simple steps
           </h2>
 
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#64748B] sm:text-base">
-            Finding the right job doesn't have to be complicated.
-            Follow three simple steps to discover opportunities and
-            connect with employers on JobZ.
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#64748B] sm:text-base">
+            Create your profile, discover opportunities, and take
+            the next step towards a better career with JobZ.
           </p>
         </div>
 
-        {/* Steps */}
-        <div className="mt-10 grid gap-5 md:grid-cols-3 lg:mt-12 lg:gap-6">
+        {/* Cards */}
+        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {steps.map(({ number, title, description, icon: Icon, href, action }) => (
             <Link
               key={number}
               href={href}
-              className="group relative flex min-h-[280px] flex-col overflow-hidden rounded-2xl border border-[#E5ECE8] bg-white p-6 shadow-[0_4px_20px_rgba(23,43,37,.035)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#B7DCCA] hover:shadow-[0_14px_32px_rgba(23,107,76,.09)] sm:p-7 lg:min-h-[300px] lg:p-8"
+              className="group relative flex min-h-[245px] flex-col overflow-hidden rounded-2xl border border-[#E5ECE8] bg-white p-5 shadow-[0_3px_14px_rgba(23,43,37,.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7DCCA] hover:shadow-[0_12px_28px_rgba(23,107,76,.08)] sm:p-6"
             >
-              {/* Step Number */}
-              <span className="absolute right-6 top-5 text-[42px] font-bold tracking-[-.06em] text-[#EFF5F1] transition-colors duration-300 group-hover:text-[#DCEFE4]">
+              {/* Number */}
+              <span className="absolute right-5 top-4 text-4xl font-bold tracking-[-.06em] text-[#EFF5F1] transition-colors group-hover:text-[#DCEFE4]">
                 {number}
               </span>
 
               {/* Icon */}
-              <div className="relative z-10 grid size-[62px] place-items-center rounded-2xl bg-[#EAF5F0] text-[#238D62] transition-all duration-300 group-hover:bg-[#16895C] group-hover:text-white">
-                <Icon className="size-7" strokeWidth={2} />
+              <div className="grid size-12 place-items-center rounded-xl bg-[#EAF5F0] text-[#238D62] transition-all duration-300 group-hover:bg-[#3FA47B] group-hover:text-white">
+                <Icon className="size-6" />
               </div>
 
               {/* Content */}
-              <div className="mt-7">
-                <h3 className="text-lg font-bold tracking-[-.025em] text-[#172B25] sm:text-xl">
-                  {title}
-                </h3>
+              <h3 className="mt-5 text-base font-bold tracking-tight text-[#172B25]">
+                {title}
+              </h3>
 
-                <p className="mt-3 text-sm leading-7 text-[#64748B]">
-                  {description}
-                </p>
-              </div>
+              <p className="mt-2 text-[13px] leading-6 text-[#64748B]">
+                {description}
+              </p>
 
               {/* Action */}
-              <div className="mt-auto flex items-center gap-2 pt-6 text-sm font-semibold text-[#238D62]">
+              <div className="mt-auto flex items-center gap-2 pt-5 text-xs font-semibold text-[#238D62]">
                 {action}
-                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1.5" />
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Bottom Message */}
-        <div className="mt-9 text-center">
-          <p className="text-sm text-[#64748B]">
-            Ready to take the next step?
-            <Link
-              href="/register"
-              className="ml-1 font-semibold text-[#16895C] transition-colors hover:text-[#116B47]"
-            >
-              Get started with JobZ today.
-            </Link>
-          </p>
+        {/* Bottom */}
+        <div className="mt-5 text-center">
+          <Link
+            href="/register"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#3FA47B] px-5 text-sm font-semibold text-white transition-all hover:bg-[#328A66]"
+          >
+            Get Started Free
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
       </div>
     </section>
@@ -811,34 +805,33 @@ export function WhyChooseJobZ() {
             <ArrowRight className="size-4" />
           </Link>
         </div>
-
         {/* Benefit Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {benefits.map(({ title, description, icon: Icon }, index) => (
-            <div
-              key={title}
-              className="group flex min-h-[100px] flex-col rounded-2xl border border-[#E5ECE8] bg-white p-3 shadow-[0_3px_14px_rgba(23,43,37,.035)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7DCCA] hover:shadow-[0_12px_30px_rgba(23,107,76,.08)] sm:min-h-[200px] sm:p-7"
-            >
-              <div className="flex items-center justify-between">
-                <span className="grid size-14 place-items-center rounded-2xl bg-[#EAF5F0] text-[#238D62] transition-colors group-hover:bg-[#DDF1E7]">
-                  <Icon className="size-7" />
-                </span>
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  {benefits.map(({ title, description, icon: Icon }, index) => (
+    <div
+      key={title}
+      className="group flex min-h-[155px] flex-col rounded-xl border border-[#E5ECE8] bg-white p-4 shadow-[0_2px_10px_rgba(23,43,37,.035)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7DCCA] hover:shadow-[0_8px_20px_rgba(23,107,76,.08)]"
+    >
+      <div className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-xl bg-[#EAF5F0] text-[#238D62] transition-colors group-hover:bg-[#DDF1E7]">
+          <Icon className="size-5" />
+        </span>
 
-                <span className="text-sm font-semibold tracking-wide text-[#B2C0B8]">
-                  0{index + 1}
-                </span>
-              </div>
+        <span className="text-xs font-semibold text-[#B2C0B8]">
+          0{index + 1}
+        </span>
+      </div>
 
-              <h3 className="mt-3 text-base font-semibold tracking-tight text-[#172B25] sm:text-lg">
-                {title}
-              </h3>
+      <h3 className="mt-3 text-sm font-semibold tracking-tight text-[#172B25]">
+        {title}
+      </h3>
 
-              <p className="mt-2 text-sm leading-5 text-[#71817A]">
-                {description}
-              </p>
-            </div>
-          ))}
-        </div>
+      <p className="mt-1.5 text-xs leading-5 text-[#71817A]">
+        {description}
+      </p>
+    </div>
+  ))}
+</div>
       </div>
     </section>
   );

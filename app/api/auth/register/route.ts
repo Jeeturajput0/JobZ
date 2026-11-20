@@ -45,7 +45,16 @@ export async function POST(request: NextRequest) {
     const cleanEmail = email.trim().toLowerCase();
     const role = requestedRole ?? "jobSeeker";
 
-    if (role !== "jobSeeker" && role !== "employer" && role !== "admin") {
+    // Administrator accounts must be provisioned out of band. Public signup
+    // must never be able to grant platform-wide privileges.
+    if (role === "admin") {
+      return NextResponse.json(
+        { success: false, message: "Administrator accounts cannot be created through public registration." },
+        { status: 403 },
+      );
+    }
+
+    if (role !== "jobSeeker" && role !== "employer") {
       return NextResponse.json(
         { success: false, message: "Invalid account role." },
         { status: 400 }

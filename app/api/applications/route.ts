@@ -6,6 +6,7 @@ import EmployerProfile from "@/models/EmployerProfile";
 import Job from "@/models/Job";
 import { authorize } from "@/lib/authorize";
 import { connectDB } from "@/lib/mongodb";
+import { publicJobFilter } from "@/lib/public-jobs";
 
 type ApplyRequestBody = {
   jobId?: unknown;
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     const job = await Job.findOne({
       _id: new mongoose.Types.ObjectId(body.jobId),
-      status: "active",
+      ...publicJobFilter(),
     }).select("_id employerId");
 
     if (!job) {

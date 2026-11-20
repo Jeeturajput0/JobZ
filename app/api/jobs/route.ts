@@ -9,6 +9,7 @@ import User from "@/models/User";
 import EmployerProfile from "@/models/EmployerProfile";
 import { authorize } from "@/lib/authorize";
 import { replaceJobSkills, resolveLegacySkillNames, resolveSkillIds } from "@/lib/skills";
+import { publicJobFilter } from "@/lib/public-jobs";
 
 const JOB_TYPES = ["full-time", "part-time", "internship", "contract"] as const;
 const WORK_MODES = ["onsite", "remote", "hybrid"] as const;
@@ -38,6 +39,8 @@ export async function GET(request: NextRequest) {
     const salaryMax = Number(params.get("salaryMax"));
     const sort = params.get("sort") || "recommended";
     const companyId = params.get("companyId");
+    const verifiedCompany = params.get("verifiedCompany") === "true";
+    const postedWithin = params.get("postedWithin");
 
     const sortOptions: Record<string, Record<string, 1 | -1>> = {
       recommended: { isFeatured: -1, createdAt: -1 },
@@ -71,10 +74,11 @@ export async function GET(request: NextRequest) {
     if (companyId && !mongoose.Types.ObjectId.isValid(companyId)) {
       return NextResponse.json({ success: false, message: "Invalid company." }, { status: 400 });
     }
+    if (postedWithin && !["7", "30"].includes(postedWithin)) {
+      return NextResponse.json({ success: false, message: "postedWithin must be 7 or 30 days." }, { status: 400 });
+    }
 
-    const filter: Record<string, unknown> = {
-      status: "active",
-    };
+    const filter: Record<string, unknown> = { ...publicJobFilter() };
 
     if (search) {
       const expression = new RegExp(escapeRegex(search), "i");
@@ -88,7 +92,10 @@ export async function GET(request: NextRequest) {
       ];
     }
     if (category) filter.category = category;
-    if (companyId) filter.companyId = companyId;
+    if (verifiedCompany) {
+      const verifiedCompanies = await EmployerProfile.find({ verificationStatus: "verified" }).distinct("_id");
+      filter.companyId = { $in: companyId ? verifiedCompanies.filter((id) => String(id) === companyId) : verifiedCompanies };
+    } else if (companyId) filter.companyId = companyId;
     if (location) filter.location = new RegExp(escapeRegex(location), "i");
     if (jobType) filter.jobType = jobType;
     if (workMode) filter.workMode = workMode;
@@ -96,12 +103,13 @@ export async function GET(request: NextRequest) {
     if (skills) filter.skills = new RegExp(escapeRegex(skills), "i");
     if (params.has("salaryMin")) filter.maxSalary = { $gte: salaryMin };
     if (params.has("salaryMax")) filter.minSalary = { ...(filter.minSalary as object || {}), $lte: salaryMax };
+    if (postedWithin) filter.createdAt = { $gte: new Date(Date.now() - Number(postedWithin) * 24 * 60 * 60 * 1000) };
 
     const [jobs, total] = await Promise.all([
       Job.find(filter)
         .populate(
           "companyId",
-          "companyName companyLogo industry website location description",
+          "companyName companyLogo industry website location description verificationStatus",
         )
         .sort(sortOptions[sort])
         .skip((page - 1) * limit)
@@ -322,7 +330,10 @@ export async function POST(request: NextRequest) {
       benefits: benefits || [],
       applicationDeadline,
       status: "active",
+      // Jobs go live as soon as they are posted so they show up on the home
+      // page and in public listings without waiting for manual approval.
       approvalStatus: "approved",
+      ...(auth.user.role === "admin" ? { reviewedBy: auth.user.userId, reviewedAt: new Date() } : {}),
       isFeatured: false,
     });
 
@@ -331,7 +342,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "Job created successfully and is now live.",
+        message: "Job created and published successfully. It is now live on the home page.",
         job,
       },
       { status: 201 }

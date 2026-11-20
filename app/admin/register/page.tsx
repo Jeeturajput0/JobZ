@@ -1,5 +1,5 @@
-import { AuthPage } from "@/components/portal";
+import { redirect } from "next/navigation";
 
 export default function AdminRegisterPage() {
-  return <AuthPage kind="admin-register" />;
+  redirect("/admin/login");
 }

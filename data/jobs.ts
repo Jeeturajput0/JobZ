@@ -23,6 +23,9 @@ export interface Job {
   applicationDeadline?: string;
   experienceLevel?: string;
   companyDescription?: string;
+  verifiedCompany?: boolean;
+  minSalary?: number;
+  maxSalary?: number;
 }
 
 export interface ApiJob {
@@ -49,6 +52,7 @@ export interface ApiJob {
     companyName?: string;
     companyLogo?: string;
     description?: string;
+    verificationStatus?: string;
   } | null;
 }
 
@@ -113,5 +117,8 @@ export function toJob(record: ApiJob): Job {
     applicationDeadline: record.applicationDeadline,
     experienceLevel: record.experienceLevel,
     companyDescription: record.companyId?.description,
+    verifiedCompany: record.companyId?.verificationStatus === "verified",
+    minSalary: record.minSalary,
+    maxSalary: record.maxSalary,
   };
 }

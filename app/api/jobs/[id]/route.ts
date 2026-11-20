@@ -6,6 +6,7 @@ import {connectDB} from "@/lib/mongodb";
 import Job from "@/models/Job";
 import { authorize } from "@/lib/authorize";
 import { replaceJobSkills, resolveLegacySkillNames } from "@/lib/skills";
+import { publicJobFilter } from "@/lib/public-jobs";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -73,6 +74,7 @@ export async function PATCH(
     "benefits",
     "applicationDeadline",
     "isFeatured",
+    "approvalStatus",
   ];
   const unknownFields = Object.keys(input).filter(
     (field) => !editableFields.includes(field),
@@ -99,6 +101,15 @@ export async function PATCH(
         { success: false, message: `Employers cannot update these fields: ${restrictedFields.join(", ")}.` },
         { status: 403 },
       );
+    }
+  }
+
+  if ("approvalStatus" in input) {
+    if (auth.user.role !== "admin") {
+      return NextResponse.json({ success: false, message: "Only admins can review job posts." }, { status: 403 });
+    }
+    if (!["pending", "approved", "rejected"].includes(input.approvalStatus as string)) {
+      return NextResponse.json({ success: false, message: "Invalid job approval status." }, { status: 400 });
     }
   }
 
@@ -202,6 +213,9 @@ export async function PATCH(
       );
     }
 
+    const approvalChanged =
+      "approvalStatus" in input && input.approvalStatus !== job.approvalStatus;
+
     const nextMin = "minSalary" in input ? input.minSalary : job.minSalary;
     const nextMax = "maxSalary" in input ? input.maxSalary : job.maxSalary;
     if (
@@ -217,6 +231,10 @@ export async function PATCH(
 
     for (const [field, value] of Object.entries(input)) {
       job.set(field, field === "applicationDeadline" && value ? new Date(value as string) : value);
+    }
+    if (approvalChanged) {
+      job.set("reviewedBy", new mongoose.Types.ObjectId(auth.user.userId));
+      job.set("reviewedAt", new Date());
     }
     await job.save();
     if (selectedSkills) await replaceJobSkills(job._id, selectedSkills);
@@ -265,10 +283,7 @@ export async function GET(
     }
 
     // 4. Find only active and approved job
-    const job = await Job.findOne({
-      _id: id,
-      status: "active",
-    })
+    const job = await Job.findOne({ _id: id, ...publicJobFilter() })
       .populate(
         "companyId",
         "companyName companyLogo industry website location description"
