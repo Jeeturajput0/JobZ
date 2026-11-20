@@ -192,8 +192,9 @@ export function JobsPage() {
           </button>
         </motion.form>
         <div className="jobs-layout [display:grid] [grid-template-columns:235px_1fr] [gap:25px] max-[700px]:[grid-template-columns:1fr] max-[900px]:[grid-template-columns:minmax(190px,_230px)_minmax(0,_1fr)] max-[900px]:[gap:1.25rem]">
-          <motion.aside className="filters [border:1px_solid_#edf0f3] [border-radius:.75rem] [padding:17px] [height:max-content] max-[700px]:[display:grid] max-[700px]:[grid-template-columns:1fr_1fr] max-[700px]:[gap:0_10px] [border-color:#E5ECE8] motion-safe-enter [@media(scripting:none)]:[opacity:1!important] [@media(scripting:none)]:[filter:none!important] [@media(scripting:none)]:[transform:none!important]" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, delay: 0.06 }}>
-            <div className="filter-title [display:flex] [justify-content:space-between] [align-items:center] [margin-bottom:21px] [&_b]:[display:flex] [&_b]:[align-items:center] [&_b]:[gap:8px] [&_b]:[font-size:14px] [&_button]:[background:none] [&_button]:[border:0] [&_button]:[color:#328A66] [&_button]:[font-size:15px] max-[700px]:[grid-column:1/-1] [&_b]:[line-height:1.5] [&_button]:[line-height:1.5] [&_button:hover]:[color:#267653]">
+          <motion.aside
+  className="filters sticky top-[70px] self-start [border:1px_solid_#edf0f3] [border-radius:.75rem] [padding:17px] [height:max-content] ..."
+>    <div className="filter-title [display:flex] [justify-content:space-between] [align-items:center] [margin-bottom:21px] [&_b]:[display:flex] [&_b]:[align-items:center] [&_b]:[gap:8px] [&_b]:[font-size:14px] [&_button]:[background:none] [&_button]:[border:0] [&_button]:[color:#328A66] [&_button]:[font-size:15px] max-[700px]:[grid-column:1/-1] [&_b]:[line-height:1.5] [&_button]:[line-height:1.5] [&_button:hover]:[color:#267653]">
               <b>
                 <Filter size={17} /> Filters
               </b>

@@ -282,17 +282,17 @@ function SectionHeading({
   linkText?: string;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
+    <div className="mb-2 flex items-end justify-between gap-3">
       <div>
-        <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[.12em] text-[#167B55]">
-          <span className="h-0.5 w-6 bg-[#3FA47B]" />
+        <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#167B55]">
+          <span className="h-0.5 w-5 bg-[#3FA47B]" />
           {eyebrow}
         </p>
         <h2 className="text-xl font-semibold tracking-[-.035em] text-[#111827] sm:text-[22px]">
           {title}
         </h2>
         {description && (
-          <p className="mt-1 max-w-2xl text-[13px] leading-5 text-[#64748B]">
+          <p className=" max-w-2xl text-[13px] leading-4 text-[#64748B]">
             {description}
           </p>
         )}
@@ -310,75 +310,115 @@ function SectionHeading({
   );
 }
 
+
 export function HowJobZWorks() {
   const steps = [
     {
+      number: "01",
       title: "Create Your Account",
       description:
-        "Build your profile with your skills, experience, and career interests.",
+        "Sign up on JobZ and build your professional profile. Add your skills, qualifications, experience, and career preferences to help employers discover you.",
       icon: UserRoundPlus,
       href: "/register",
+      action: "Create free account",
     },
     {
-      title: "Explore Job Openings",
+      number: "02",
+      title: "Discover the Right Jobs",
       description:
-        "Search and filter listings by role, skills, location, and other details.",
+        "Explore thousands of opportunities and find roles that match your interests. Filter jobs by location, experience, salary, and job type.",
       icon: Search,
       href: "/jobs",
+      action: "Explore opportunities",
     },
     {
-      title: "Apply with Confidence",
+      number: "03",
+      title: "Apply & Move Forward",
       description:
-        "Review each role’s requirements and details, then submit your application.",
+        "Find a role that matches your goals, review the requirements, and submit your application. Take the next step towards your dream career.",
       icon: BriefcaseBusiness,
       href: "/jobs",
+      action: "Find your next job",
     },
   ];
+
   return (
     <section
       aria-labelledby="how-jobz-works-title"
-      className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-11 lg:py-10"
+      className="bg-[#F7FAF8] py-14 sm:py-16 lg:py-20"
     >
-      <div className="mx-auto max-w-3xl">
-        <div className="text-center">
-          <p className="mb-1.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.12em] text-[#3FA47B]">
-            <span className="h-0.5 w-5 bg-[#3FA47B]" />
-            How JobZ works
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-11">
+
+        {/* Section Heading */}
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#D6EDE1] bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[.12em] text-[#238D62]">
+            <span className="size-1.5 rounded-full bg-[#238D62]" />
+            How JobZ Works
           </p>
+
           <h2
             id="how-jobz-works-title"
-            className="text-xl font-semibold tracking-[-.035em] text-[#111827] sm:text-[22px]"
+            className="text-2xl font-bold leading-tight tracking-[-.04em] text-[#172B25] sm:text-3xl lg:text-[36px]"
           >
-            Just 3 simple steps to get started
+            Your next career move starts here
           </h2>
+
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#64748B] sm:text-base">
+            Finding the right job doesn't have to be complicated.
+            Follow three simple steps to discover opportunities and
+            connect with employers on JobZ.
+          </p>
         </div>
-        <div className="mt-5 grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:gap-2">
-          {steps.map(({ title, description, icon: Icon, href }, index) => (
-            <div key={title} className="contents">
-              <Link
-                href={href}
-                className="group flex min-w-0 items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[#F5FAF7] sm:px-1"
-              >
-                <span className="grid size-[58px] shrink-0 place-items-center rounded-full bg-[#EAF5F0] text-[#238D62] shadow-[5px_0_0_#DDF1E7]">
-                  <Icon className="size-6" strokeWidth={2.3} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#111827]">
-                    {index + 1}. {title}
-                  </span>
-                  <span className="mt-1 block text-xs leading-4 text-[#64748B]">
-                    {description}
-                  </span>
-                </span>
-              </Link>
-              {index < steps.length - 1 && (
-                <ArrowRight
-                  aria-hidden="true"
-                  className="hidden size-5 text-[#3FA47B] sm:block"
-                />
-              )}
-            </div>
+
+        {/* Steps */}
+        <div className="mt-10 grid gap-5 md:grid-cols-3 lg:mt-12 lg:gap-6">
+          {steps.map(({ number, title, description, icon: Icon, href, action }) => (
+            <Link
+              key={number}
+              href={href}
+              className="group relative flex min-h-[280px] flex-col overflow-hidden rounded-2xl border border-[#E5ECE8] bg-white p-6 shadow-[0_4px_20px_rgba(23,43,37,.035)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#B7DCCA] hover:shadow-[0_14px_32px_rgba(23,107,76,.09)] sm:p-7 lg:min-h-[300px] lg:p-8"
+            >
+              {/* Step Number */}
+              <span className="absolute right-6 top-5 text-[42px] font-bold tracking-[-.06em] text-[#EFF5F1] transition-colors duration-300 group-hover:text-[#DCEFE4]">
+                {number}
+              </span>
+
+              {/* Icon */}
+              <div className="relative z-10 grid size-[62px] place-items-center rounded-2xl bg-[#EAF5F0] text-[#238D62] transition-all duration-300 group-hover:bg-[#16895C] group-hover:text-white">
+                <Icon className="size-7" strokeWidth={2} />
+              </div>
+
+              {/* Content */}
+              <div className="mt-7">
+                <h3 className="text-lg font-bold tracking-[-.025em] text-[#172B25] sm:text-xl">
+                  {title}
+                </h3>
+
+                <p className="mt-3 text-sm leading-7 text-[#64748B]">
+                  {description}
+                </p>
+              </div>
+
+              {/* Action */}
+              <div className="mt-auto flex items-center gap-2 pt-6 text-sm font-semibold text-[#238D62]">
+                {action}
+                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1.5" />
+              </div>
+            </Link>
           ))}
+        </div>
+
+        {/* Bottom Message */}
+        <div className="mt-9 text-center">
+          <p className="text-sm text-[#64748B]">
+            Ready to take the next step?
+            <Link
+              href="/register"
+              className="ml-1 font-semibold text-[#16895C] transition-colors hover:text-[#116B47]"
+            >
+              Get started with JobZ today.
+            </Link>
+          </p>
         </div>
       </div>
     </section>
@@ -589,6 +629,7 @@ export function FeaturedJobs({
 }
 
 
+
 export function TopCompanies({
   companies,
   loading,
@@ -598,65 +639,117 @@ export function TopCompanies({
   loading: boolean;
   error: boolean;
 }) {
+  const visibleCompanies = companies.slice(0, 6);
+
+  const CompanyCards = ({
+    duplicate = false,
+  }: {
+    duplicate?: boolean;
+  }) => (
+    <div
+      className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4"
+      aria-hidden={duplicate || undefined}
+    >
+      {visibleCompanies.map((company) => (
+        <Link
+          key={`${duplicate ? "duplicate-" : ""}${company.id}`}
+          href={`/companies/${company.id}`}
+          tabIndex={duplicate ? -1 : undefined}
+          className="group flex h-[86px] w-[155px] shrink-0 items-center gap-3 rounded-xl border border-[#E5ECE8] bg-white px-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#B7DCCA] hover:shadow-[0_6px_18px_rgba(23,107,76,.08)] sm:h-[90px] sm:w-[175px] sm:px-4"
+        >
+          {/* Company Logo */}
+          <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F4F8F6]">
+            {company.logo ? (
+              <img
+                src={company.logo}
+                alt=""
+                loading="lazy"
+                className="max-h-9 max-w-9 object-contain transition-transform duration-200 group-hover:scale-105"
+              />
+            ) : (
+              <span className="text-xl font-bold text-[#238D62]">
+                {company.name.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+
+          {/* Company Details */}
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-2 text-left text-[13px] font-semibold leading-5 text-[#172B25] transition-colors group-hover:text-[#16895C]">
+              {company.name}
+            </p>
+
+            <p className="mt-0.5 text-left text-[11px] text-[#71817A]">
+              {company.jobCount.toLocaleString()}{" "}
+              {company.jobCount === 1 ? "opening" : "openings"}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+
   return (
-    <section className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-11">
+    <section className="mx-auto max-w-7xl overflow-hidden px-5 py-3 sm:px-8 lg:px-11">
       <SectionHeading
         eyebrow="Top companies"
-        title="Explore employers and their opportunities"
-        description="Learn about employers through their profiles, explore their workplaces, and see the openings they currently list on JobZ."
+        title="Explore companies hiring on JobZ"
+        description="Discover leading employers, explore their profiles, and find opportunities that match your career goals."
         href="/companies"
         linkText="View all companies"
       />
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 6 }, (_, index) => (
             <div
               key={index}
-              className="h-36 animate-pulse rounded-2xl border border-[#E5ECE8] bg-white"
+              className="h-[86px] w-[155px] shrink-0 animate-pulse rounded-xl border border-[#E5ECE8] bg-white sm:w-[175px]"
             />
           ))}
         </div>
       ) : error ? (
         <EmptyInline message="Company profiles are temporarily unavailable." />
-      ) : companies.length ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {companies.slice(0, 6).map((company) => (
-            <Link
-              key={company.id}
-              href={`/companies/${company.id}`}
-              className="group flex min-h-[150px] flex-col items-center justify-center rounded-2xl border border-[#E5ECE8] bg-white px-4 py-5 text-center shadow-[0_3px_12px_rgba(23,43,37,.04)] transition-all duration-200 hover:-translate-y-1 hover:border-[#B7DCCA] hover:shadow-[0_10px_24px_rgba(23,107,76,.08)]"
-            >
-              {/* Company Logo */}
-              <div className="flex h-[76px] w-full items-center justify-center">
-                {company.logo ? (
-                  <img
-                    src={company.logo}
-                    alt={`${company.name} logo`}
-                    loading="lazy"
-                    className="max-h-[68px] max-w-full object-contain transition-transform duration-200 group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="grid size-14 place-items-center rounded-xl bg-[#EAF5F0] text-2xl font-bold text-[#238D62]">
-                    {company.name.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-
-              <span className="mt-3 line-clamp-1 w-full text-sm font-semibold text-[#172B25]">
-                {company.name}
-              </span>
-
-              <span className="mt-1 text-xs text-[#71817A]">
-                {company.jobCount.toLocaleString()}{" "}
-                {company.jobCount === 1 ? "job" : "jobs"}
-              </span>
-            </Link>
-          ))}
+      ) : visibleCompanies.length ? (
+        <div className="group/marquee relative overflow-hidden">
+          <div
+            className={`flex w-max ${
+              visibleCompanies.length > 1
+                ? "animate-companies-marquee group-hover/marquee:[animation-play-state:paused]"
+                : ""
+            }`}
+          >
+            <CompanyCards />
+            {visibleCompanies.length > 1 && (
+              <CompanyCards duplicate />
+            )}
+          </div>
         </div>
       ) : (
         <EmptyInline message="Company profiles will appear here as employers join JobZ." />
       )}
+
+      <style jsx>{`
+        .animate-companies-marquee {
+          animation: companies-marquee 32s linear infinite;
+          will-change: transform;
+        }
+
+        @keyframes companies-marquee {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-companies-marquee {
+            animation: none;
+          }
+        }
+      `}</style>
     </section>
   );
 }
@@ -691,7 +784,7 @@ export function WhyChooseJobZ() {
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-11 lg:py-20">
+    <section className="mx-auto max-w-7xl px-5  sm:px-8 lg:px-11 lg:py-10">
       <div className="grid gap-10 lg:grid-cols-[.85fr_1.65fr] lg:items-center lg:gap-14">
         {/* Left Content */}
         <div className="max-w-lg">
@@ -724,7 +817,7 @@ export function WhyChooseJobZ() {
           {benefits.map(({ title, description, icon: Icon }, index) => (
             <div
               key={title}
-              className="group flex min-h-[220px] flex-col rounded-2xl border border-[#E5ECE8] bg-white p-6 shadow-[0_3px_14px_rgba(23,43,37,.035)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7DCCA] hover:shadow-[0_12px_30px_rgba(23,107,76,.08)] sm:min-h-[240px] sm:p-7"
+              className="group flex min-h-[100px] flex-col rounded-2xl border border-[#E5ECE8] bg-white p-3 shadow-[0_3px_14px_rgba(23,43,37,.035)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7DCCA] hover:shadow-[0_12px_30px_rgba(23,107,76,.08)] sm:min-h-[200px] sm:p-7"
             >
               <div className="flex items-center justify-between">
                 <span className="grid size-14 place-items-center rounded-2xl bg-[#EAF5F0] text-[#238D62] transition-colors group-hover:bg-[#DDF1E7]">
@@ -736,11 +829,11 @@ export function WhyChooseJobZ() {
                 </span>
               </div>
 
-              <h3 className="mt-6 text-base font-semibold tracking-tight text-[#172B25] sm:text-lg">
+              <h3 className="mt-3 text-base font-semibold tracking-tight text-[#172B25] sm:text-lg">
                 {title}
               </h3>
 
-              <p className="mt-2 text-sm leading-6 text-[#71817A]">
+              <p className="mt-2 text-sm leading-5 text-[#71817A]">
                 {description}
               </p>
             </div>
@@ -753,8 +846,8 @@ export function WhyChooseJobZ() {
 
 export function CTASection() {
   return (
-    <section className="mx-auto max-w-7xl px-5 pb-3 pt-5 sm:px-8 lg:px-11">
-      <div className="relative flex min-h-[88px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-[#16895C] via-[#239966] to-[#4CB686] px-5 py-5 text-white sm:px-8">
+    <section className="mx-auto max-w-7xl px-5 pb-3 lg:px-11">
+      <div className="relative flex min-h-[120px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-[#16895C] via-[#239966] to-[#4CB686] px-5 py-5 text-white sm:px-8">
         <div className="relative z-10 max-w-lg">
           <h2 className="text-base font-semibold tracking-tight sm:text-lg">
             Create your profile and explore what’s next
