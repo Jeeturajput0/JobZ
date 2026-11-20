@@ -67,7 +67,7 @@ export function Navbar() {
         {account ? <>
           {account.role !== "admin" && <Link href={profileUrl} aria-label={`${account.fullName}, ${roleLabel} public profile`} className="flex min-h-10 max-w-48 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-[#F1F5F9]">
             <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EAF5F0] text-xs font-bold text-[#16895C]">{profileImage ? <img src={profileImage} alt="" className="size-full object-cover" /> : initials}</span>
-            <span className="min-w-0 text-left"><span className="block truncate text-[13px] font-semibold leading-4 text-[#172B25]">{account.fullName}</span><span className="block text-[11px] leading-4 text-[#64746B]">{roleLabel} · Profile</span></span>
+            <span className="min-w-0 text-left"><span className="block truncate text-[13px] font-semibold leading-4 text-[#172B25]">{account.fullName}</span></span>
           </Link>}
           <Link href={dashboard} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#16895C] px-4 text-[13px] font-semibold text-white hover:bg-[#328A66]">Workspace <ArrowRight className="size-3.5" /></Link>
         </> : <>

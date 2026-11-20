@@ -10,10 +10,11 @@ export interface AuthUser {
 export function getAuthUser(
   request: NextRequest
 ): AuthUser | null {
-  try {
-    // 1. Get JWT token from cookie
-    const token = request.cookies.get("jobz_token")?.value;
+  return getAuthUserFromToken(request.cookies.get("jobz_token")?.value);
+}
 
+export function getAuthUserFromToken(token?: string): AuthUser | null {
+  try {
     if (!token) {
       return null;
     }

@@ -14,6 +14,7 @@ import {
 import { CategoryManager } from "./category-manager";
 import { EmployerJobsPanel, EmployerApplicantsPanel } from "./employer-panels";
 import { PostJobForm } from "./post-job-form";
+import { ResumePrivacyControl } from "./resume-privacy-control";
 import {
   AdminPeoplePanel,
   AdminApplicationsPanel,
@@ -827,7 +828,7 @@ export function DashboardPage({
           ) : active === "analytics" ? (
             <DashboardOverview roleKey={roleKey} />
           ) : active === "resume" ? (
-            <ResumePanel />
+            <div className="space-y-4"><ResumePanel />{roleKey === "jobSeeker" && <div className="max-w-[600px] rounded-xl border border-[#E5ECE8] bg-white p-5"><ResumePrivacyControl /></div>}</div>
           ) : active === "notifications" ? (
             <NotificationsPanel />
           ) : active === "categories" ? (

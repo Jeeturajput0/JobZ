@@ -20,8 +20,11 @@ export interface IJobSeekerProfile {
     description?: string;
   }[];
   resumeUrl?: string;
+  resumePublic?: boolean;
   portfolioUrl?: string;
   linkedInUrl?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const JobSeekerProfileSchema =
@@ -79,6 +82,11 @@ const JobSeekerProfileSchema =
       resumeUrl: {
         type: String,
         default: "",
+      },
+
+      resumePublic: {
+        type: Boolean,
+        default: false,
       },
 
       portfolioUrl: {

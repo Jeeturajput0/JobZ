@@ -13,7 +13,7 @@ export async function getPublicProfile(username: string) {
 
   if (user.role === "jobSeeker") {
     const profile = await JobSeekerProfile.findOne({ userId: user._id })
-      .select("profileImage headline summary location skills education experience resumeUrl portfolioUrl linkedInUrl")
+      .select("profileImage headline summary location skills education experience resumeUrl resumePublic portfolioUrl linkedInUrl updatedAt")
       .lean();
     if (!profile) return null;
     return {
@@ -27,7 +27,8 @@ export async function getPublicProfile(username: string) {
       skills: profile.skills || [],
       education: (profile.education || []).map(({ degree, institution, year }) => ({ degree, institution, year })),
       experience: (profile.experience || []).map(({ company, position, duration, description }) => ({ company, position, duration, description })),
-      resumeUrl: profile.resumeUrl || "",
+      resumeUrl: profile.resumePublic ? profile.resumeUrl || "" : "",
+      updatedAt: profile.updatedAt?.toISOString() || "",
       portfolioUrl: profile.portfolioUrl || "",
       linkedInUrl: profile.linkedInUrl || "",
     };
@@ -61,4 +62,15 @@ export async function getPublicProfile(username: string) {
       createdAt: (createdAt || new Date()).toISOString(),
     })),
   };
+}
+
+export async function isPublicProfileOwner(username: string, userId: string) {
+  if (!userId) return false;
+  await connectDB();
+  return Boolean(await User.exists({
+    _id: userId,
+    username: username.toLowerCase(),
+    role: "jobSeeker",
+    status: "active",
+  }));
 }

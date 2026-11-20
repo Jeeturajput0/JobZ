@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState, type ChangeEvent } from "react";
 import { Bell, FileText, Settings } from "lucide-react";
 import { SkillMultiSelect, type SkillOption } from "@/components/skill-multiselect";
 
-type Profile = Record<string, string | string[]>;
+type Profile = Record<string, string | string[] | boolean>;
 
 export function ProfileSettings({ roleKey }: { roleKey: string }) {
   const employer = roleKey === "employer";
@@ -35,7 +35,7 @@ export function ProfileSettings({ roleKey }: { roleKey: string }) {
     }).then((skills) => { if (active) setCandidateSkills(skills); }).catch((error: unknown) => { if (active) setMessage(error instanceof Error ? error.message : "Could not load your skills."); }).finally(() => { if (active) setSkillsLoading(false); });
     return () => { active = false; };
   }, [employer]);
-  function update(key: string, value: string) { setProfile((current) => ({ ...current, [key]: value })); }
+  function update(key: string, value: string | boolean) { setProfile((current) => ({ ...current, [key]: value })); }
   function chooseProfileImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
     if (!file) return;

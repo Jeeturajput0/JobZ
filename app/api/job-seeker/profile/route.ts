@@ -30,6 +30,7 @@ export async function PUT(request: NextRequest) {
       "education",
       "experience",
       "resumeUrl",
+      "resumePublic",
       "portfolioUrl",
       "linkedInUrl",
     ] as const;
@@ -81,6 +82,24 @@ export async function PUT(request: NextRequest) {
         { success: false, message: "Skills must be an array of strings." },
         { status: 400 }
       );
+    }
+
+    if (updateData.resumePublic !== undefined && typeof updateData.resumePublic !== "boolean") {
+      return NextResponse.json(
+        { success: false, message: "resumePublic must be a boolean." },
+        { status: 400 },
+      );
+    }
+
+    if (updateData.resumeUrl === "") updateData.resumePublic = false;
+    if (updateData.resumePublic === true && !updateData.resumeUrl) {
+      const existingProfile = await JobSeekerProfile.findOne({ userId: auth.user.userId }).select("resumeUrl").lean();
+      if (!existingProfile?.resumeUrl) {
+        return NextResponse.json(
+          { success: false, message: "Add a resume link before making it public." },
+          { status: 400 },
+        );
+      }
     }
 
     if (
