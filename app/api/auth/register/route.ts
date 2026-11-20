@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
+import { publicUsername } from "@/lib/public-profile";
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,6 +94,8 @@ export async function POST(request: NextRequest) {
       phone: phone?.trim() || "",
       role,
     });
+    user.username = publicUsername(cleanName, user._id);
+    await user.save();
 
     // 8. Return safe response (never return password)
     return NextResponse.json(
@@ -102,6 +105,7 @@ export async function POST(request: NextRequest) {
         user: {
           id: user._id,
           fullName: user.fullName,
+          username: user.username,
           email: user.email,
           role: user.role,
         },

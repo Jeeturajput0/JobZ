@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import { getAuthUser } from "@/lib/auth";
+import { publicUsername } from "@/lib/public-profile";
+import JobSeekerProfile from "@/models/JobSeekerProfile";
+import EmployerProfile from "@/models/EmployerProfile";
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +50,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const profile = user.role === "jobSeeker"
+      ? await JobSeekerProfile.findOne({ userId: user._id }).select("profileImage").lean()
+      : user.role === "employer"
+        ? await EmployerProfile.findOne({ userId: user._id }).select("companyName companyLogo").lean()
+        : null;
+    if (!user.username) {
+      const label = user.role === "employer" && profile && "companyName" in profile
+        ? profile.companyName
+        : user.fullName;
+      user.username = publicUsername(label, user._id);
+      await user.save();
+    }
+
     // 5. Return current user
     return NextResponse.json(
       {
@@ -55,6 +71,9 @@ export async function GET(request: NextRequest) {
         user: {
           id: user._id,
           fullName: user.fullName,
+          username: user.username,
+          profileImage: profile && "profileImage" in profile ? profile.profileImage : null,
+          companyLogo: profile && "companyLogo" in profile ? profile.companyLogo : null,
           email: user.email,
           phone: user.phone,
           role: user.role,

@@ -23,6 +23,8 @@ export interface IJob {
   status: "draft" | "active" | "inactive" | "closed";
   approvalStatus: "pending" | "approved" | "rejected";
   isFeatured: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const JobSchema = new Schema<IJob>(

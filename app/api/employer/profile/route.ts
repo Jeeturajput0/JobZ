@@ -5,6 +5,8 @@ import {connectDB} from "@/lib/mongodb";
 import EmployerProfile from "@/models/EmployerProfile";
 import { authorize } from "@/lib/authorize";
 import { isValidProfileImage } from "@/lib/profile-image";
+import User from "@/models/User";
+import { publicUsername } from "@/lib/public-profile";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -129,6 +131,13 @@ export async function PUT(request: NextRequest) {
         setDefaultsOnInsert: true,
       }
     );
+    if (companyName) {
+      const user = await User.findById(auth.user.userId).select("_id username");
+      if (user) {
+        user.username = publicUsername(companyName, user._id);
+        await user.save();
+      }
+    }
 
     return NextResponse.json(
       {
