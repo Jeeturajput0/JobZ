@@ -8,7 +8,7 @@ import Job from "@/models/Job";
 type Context = { params: Promise<{ id: string }> };
 
 async function findAuthorizedJob(id: string, request: NextRequest, roles: ("admin" | "employer" | "jobSeeker")[]) {
-  const auth = authorize(request, roles);
+  const auth = await authorize(request, roles);
   if (!auth.authorized) return { response: auth.response } as const;
   if (!mongoose.Types.ObjectId.isValid(id)) return { response: NextResponse.json({ success: false, message: "Invalid job ID." }, { status: 400 }) } as const;
   const job = await Job.findById(id);

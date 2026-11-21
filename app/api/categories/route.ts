@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = authorize(request, ["admin"]);
+  const auth = await authorize(request, ["admin"]);
   if (!auth.authorized) return auth.response;
   const body = await request.json().catch(() => null);
   if (!body || typeof body.name !== "string" || body.name.trim().length < 2 || body.name.trim().length > 80) return NextResponse.json({ success: false, message: "Category name must be 2 to 80 characters." }, { status: 400 });
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const auth = authorize(request, ["admin"]);
+  const auth = await authorize(request, ["admin"]);
   if (!auth.authorized) return auth.response;
   const id = request.nextUrl.searchParams.get("id");
   if (!id || !mongoose.Types.ObjectId.isValid(id)) return NextResponse.json({ success: false, message: "A valid category id is required." }, { status: 400 });

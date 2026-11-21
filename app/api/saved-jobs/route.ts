@@ -7,7 +7,7 @@ import SavedJob from "@/models/SavedJob";
 import { publicJobFilter } from "@/lib/public-jobs";
 
 export async function GET(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
   if (!auth.authorized) return auth.response;
   try {
     await connectDB();
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
   if (!auth.authorized) return auth.response;
   const body = await request.json().catch(() => null);
   if (!body || typeof body.jobId !== "string" || !mongoose.Types.ObjectId.isValid(body.jobId)) return NextResponse.json({ success: false, message: "A valid jobId is required." }, { status: 400 });
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
   if (!auth.authorized) return auth.response;
   const jobId = request.nextUrl.searchParams.get("jobId");
   if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) return NextResponse.json({ success: false, message: "A valid jobId is required." }, { status: 400 });

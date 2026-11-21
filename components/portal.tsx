@@ -11,15 +11,7 @@ import {
   NotificationsPanel,
   SettingsPanel,
 } from "./account-panels";
-import { CategoryManager } from "./category-manager";
-import { EmployerJobsPanel, EmployerApplicantsPanel } from "./employer-panels";
-import { PostJobForm } from "./post-job-form";
 import { ResumePrivacyControl } from "./resume-privacy-control";
-import {
-  AdminPeoplePanel,
-  AdminApplicationsPanel,
-  AdminContactMessagesPanel,
-} from "./admin-people-panel";
 import { reveal, stagger, subtleReveal } from "@/lib/motion";
 import {
   Activity,
@@ -50,44 +42,18 @@ import {
 import { useJobZ } from "./provider";
 import { JobCard } from "./site";
 import type { Job } from "@/data/jobs";
-import { AdminJobsManager } from "@/components/admin-jobs";
 import { HowJobZWorks } from "@/components/home/HomeSections";
+import { ROLE_DASHBOARD, type SystemRole } from "@/lib/constants";
 
-const links: Record<string, [string, string][]> = {
-  seeker: [
-    ["Overview", "dashboard"],
-    ["Find jobs", "find-jobs"],
-    ["My applications", "applications"],
-    ["Saved jobs", "saved-jobs"],
-    ["My profile", "profile"],
-    ["Resume", "resume"],
-    ["Notifications", "notifications"],
-    ["Settings", "settings"],
-  ],
-  employer: [
-    ["Overview", "dashboard"],
-    ["Post a job", "post-job"],
-    ["Manage jobs", "manage-jobs"],
-    ["Applicants", "applicants"],
-    ["Company profile", "company-profile"],
-    ["Analytics", "analytics"],
-    ["Notifications", "notifications"],
-    ["Settings", "settings"],
-  ],
-  admin: [
-    ["Overview", "dashboard"],
-    ["Job seekers", "job-seekers"],
-    ["Employers", "employers"],
-    ["Manage jobs", "jobs"],
-    ["Applications", "applications"],
-    ["Contact messages", "contact-messages"],
-    ["Categories", "categories"],
-    ["Companies", "companies"],
-    ["Featured jobs", "featured-jobs"],
-    ["Reports & analytics", "analytics"],
-    ["Settings", "settings"],
-  ],
-};
+const links: Record<string, [string, string][]> = {};
+
+/** URL segment -> system roles allowed to view that dashboard. */
+const ROUTE_ROLES: Record<string, SystemRole[]> = {};
+
+function roleKeyFor(role: SystemRole): string {
+  if (role === "jobSeeker") return "seeker";
+  return role;
+}
 const icons = [
   LayoutDashboard,
   Search,
@@ -255,9 +221,10 @@ export function AuthPage({ kind }: { kind: string }) {
 
       const target = adminLogin
         ? "/admin/dashboard"
-        : result.user?.role === "jobSeeker"
-          ? "/job-seeker/dashboard"
-          : `/${result.user?.role}/dashboard`;
+        : result.user?.dashboard ||
+          (result.user?.role === "jobSeeker"
+            ? "/profile"
+            : `/${result.user?.role}/dashboard`);
       router.replace(target);
       router.refresh();
     } catch {
@@ -516,11 +483,11 @@ export function DashboardPage({
 }) {
   const router = useRouter();
   const { jobs, saved, apps } = useJobZ();
-  const [user, setUser] = useState<{ role: string; name: string } | null>(null);
+  const [user, setUser] = useState<{ role: SystemRole; roleKey: string; name: string } | null>(null);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState("");
-  const roleKey = role === "job-seeker" ? "seeker" : role;
-  const items = links[roleKey] || links.seeker;
+  const roleKey = user?.roleKey || "";
+  const items = links[roleKey] || [];
   const active = section || "dashboard";
   const pageTitle = items.find((item) => item[1] === active)?.[0] || "Overview";
 
@@ -534,24 +501,20 @@ export function DashboardPage({
 
         const result = await response.json();
         const account = result.user;
-        const accountRole =
-          account?.role === "jobSeeker" ? "seeker" : account?.role;
+        const accountRole = account?.role as SystemRole | undefined;
 
         if (!current) return;
-        if (!account || !links[accountRole]) {
+        if (!account || !accountRole) {
           router.replace("/login");
           return;
         }
-        if (accountRole !== roleKey) {
-          router.replace(
-            accountRole === "seeker"
-              ? "/job-seeker/dashboard"
-              : `/${accountRole}/dashboard`,
-          );
+        const allowedRoles = ROUTE_ROLES[role];
+        if (!allowedRoles?.includes(accountRole)) {
+          router.replace(ROLE_DASHBOARD[accountRole] || "/login");
           return;
         }
 
-        setUser({ role: accountRole, name: account.fullName });
+        setUser({ role: accountRole, roleKey: roleKeyFor(accountRole), name: account.fullName });
       } catch {
         if (current) router.replace("/login");
       }
@@ -783,10 +746,6 @@ export function DashboardPage({
                 />
               )}
             </>
-          ) : active === "jobs" && roleKey === "admin" ? (
-            <AdminJobsManager />
-          ) : active === "applications" && roleKey === "admin" ? (
-            <AdminApplicationsPanel />
           ) : active === "applications" ? (
             <Table
               title="Your applications"
@@ -801,30 +760,8 @@ export function DashboardPage({
                 "Rejected",
               ]}
             />
-          ) : active === "post-job" ? (
-            <PostJobForm />
-          ) : active === "manage-jobs" ? (
-            <EmployerJobsPanel />
-          ) : active === "applicants" ? (
-            <EmployerApplicantsPanel />
-          ) : active === "profile" || active === "company-profile" ? (
-            <ProfileSettings roleKey={roleKey} />
-          ) : active === "analytics" ? (
-            <DashboardOverview roleKey={roleKey} />
-          ) : active === "resume" ? (
-            <div className="space-y-4"><ResumePanel />{roleKey === "jobSeeker" && <div className="max-w-[600px] rounded-xl border border-[#E5ECE8] bg-white p-5"><ResumePrivacyControl /></div>}</div>
-          ) : active === "notifications" ? (
-            <NotificationsPanel />
-          ) : active === "categories" ? (
-            <CategoryManager />
-          ) : active === "contact-messages" && roleKey === "admin" ? (
-            <AdminContactMessagesPanel />
           ) : active === "settings" ? (
             <SettingsPanel />
-          ) : active === "job-seekers" && roleKey === "admin" ? (
-            <AdminPeoplePanel role="jobSeeker" />
-          ) : active === "employers" && roleKey === "admin" ? (
-            <AdminPeoplePanel role="employer" />
           ) : (
             <div className="empty-state [padding:55px_20px] [text-align:center] [border:1px_dashed_#dfe4ea] [border-radius:.75rem] [color:#7c899b] [&>svg]:[color:#3FA47B] [&_h3]:[color:#34455d] [&_h3]:[margin:12px_0_5px] [&_p]:[font-size:16px] [&_p]:[margin-bottom:17px] [&_p]:[line-height:1.65] [&_h3]:[font-size:21px] [&_h3]:[line-height:1.35] [.admin-jobs-panel_&]:[margin-top:12px] [background:#fbfcfe]">
               <h3 className="text-lg font-semibold text-[#172B25]">

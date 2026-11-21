@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { getUserSkills, resolveSkillIds, replaceUserSkills } from "@/lib/skills";
 
 export async function GET(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
   if (!auth.authorized) return auth.response;
   try {
     await connectDB();
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
   if (!auth.authorized) return auth.response;
   try {
     let body: { skillIds?: unknown };

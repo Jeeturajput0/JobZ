@@ -6,7 +6,7 @@ import EmployerProfile from "@/models/EmployerProfile";
 import Job from "@/models/Job";
 
 export async function GET(request: NextRequest) {
-  const auth = authorize(request, ["employer"]);
+  const auth = await authorize(request, ["employer"]);
   if (!auth.authorized) return auth.response;
   try {
     await connectDB();

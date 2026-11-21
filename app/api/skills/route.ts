@@ -7,7 +7,7 @@ import { listSkills } from "@/lib/skills-api";
 export async function GET(request: NextRequest) { return listSkills(request); }
 
 export async function POST(request: NextRequest) {
-  const auth = authorize(request, ["admin", "employer", "jobSeeker"]);
+  const auth = await authorize(request, ["admin", "employer", "jobSeeker"]);
   if (!auth.authorized) return auth.response;
   try {
     let body: unknown;
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const input = body as Record<string, unknown>;
     const name = typeof input.name === "string" ? normalizeSkillName(input.name) : "";
     const category = typeof input.category === "string" ? normalizeSkillName(input.category) : "General";
-    if (!name || name.length > 80 || category.length > 60) return NextResponse.json({ success: false, message: "Skill name must be 1–80 characters and category up to 60 characters." }, { status: 400 });
+    if (!name || name.length > 80 || category.length > 60) return NextResponse.json({ success: false, message: "Skill name must be 1â€“80 characters and category up to 60 characters." }, { status: 400 });
     await connectDB();
     const skill = await getOrCreateSkill(name, category);
     return NextResponse.json({ success: true, skill }, { status: 201 });

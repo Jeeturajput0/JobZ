@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // 1. Employer and Admin can create jobs
-    const auth = authorize(request, ["employer", "admin"]);
+    const auth = await authorize(request, ["employer", "admin"]);
 
     if (!auth.authorized) {
       return auth.response;
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
       !["onsite", "remote", "hybrid"].includes(workMode)
     ) {
       return NextResponse.json(
-        { success: false, message: "Please provide valid required job details. Short description must be 1–160 characters." },
+        { success: false, message: "Please provide valid required job details. Short description must be 1â€“160 characters." },
         { status: 400 }
       );
     }
@@ -329,10 +329,10 @@ export async function POST(request: NextRequest) {
       location: location.trim(),
       benefits: benefits || [],
       applicationDeadline,
-      status: "active",
-      // Jobs go live as soon as they are posted so they show up on the home
-      // page and in public listings without waiting for manual approval.
-      approvalStatus: "approved",
+      status: auth.user.role === "admin" ? "active" : "draft",
+      // Company-created jobs must pass the super-admin approval workflow.
+      // Admin-created jobs are published immediately.
+      approvalStatus: auth.user.role === "admin" ? "approved" : "pending",
       ...(auth.user.role === "admin" ? { reviewedBy: auth.user.userId, reviewedAt: new Date() } : {}),
       isFeatured: false,
     });

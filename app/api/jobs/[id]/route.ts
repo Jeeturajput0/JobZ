@@ -28,7 +28,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: RouteContext,
 ) {
-  const auth = authorize(request, ["admin", "employer"]);
+  const auth = await authorize(request, ["admin", "employer"]);
   if (!auth.authorized) return auth.response;
 
   const { id } = await params;
@@ -328,7 +328,7 @@ export async function DELETE(
   { params }: RouteContext
 ) {
   try {
-    const auth = authorize(request, ["employer", "admin"]);
+    const auth = await authorize(request, ["employer", "admin"]);
 
     if (!auth.authorized) {
       return auth.response;

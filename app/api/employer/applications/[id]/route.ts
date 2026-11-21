@@ -7,7 +7,7 @@ import Application from "@/models/Application";
 const applicationStatuses = ["pending", "reviewed", "shortlisted", "interview", "rejected", "hired"] as const;
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = authorize(request, ["employer"]);
+  const auth = await authorize(request, ["employer"]);
   if (!auth.authorized) return auth.response;
 
   const { id } = await params;

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
+import { ROLE_DASHBOARD, ROLE_LABELS } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -111,6 +112,8 @@ export async function POST(request: NextRequest) {
           fullName: user.fullName,
           email: user.email,
           role: user.role,
+          roleLabel: ROLE_LABELS[user.role],
+          dashboard: ROLE_DASHBOARD[user.role],
         },
       },
       { status: 200 }

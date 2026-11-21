@@ -1,0 +1,58 @@
+import { NextRequest } from "next/server";
+import { requirePermission, assertCompanyScope } from "@/lib/session";
+import { ok, created, fail, handleError, readJson, cleanString, cleanStringArray } from "@/lib/api";
+import { hasPermission, permissionsForScope } from "@/lib/permissions";
+import { PERMISSION_KEYS } from "@/lib/constants";
+import { resolveCompanyId } from "@/lib/company";
+import Role from "@/models/Role";
+
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await requirePermission(request, ["company.roles.manage", "company.team.view"]);
+    if (!auth.authorized) return auth.response;
+    const companyId = await resolveCompanyId(auth.session);
+    const denial = assertCompanyScope(auth.session, companyId);
+    if (denial) return denial;
+    const roles = await Role.find({ scope: "company", scopeId: companyId }).sort({ createdAt: -1 }).lean();
+    return ok({ roles });
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await requirePermission(request, ["company.roles.manage"]);
+    if (!auth.authorized) return auth.response;
+    const companyId = await resolveCompanyId(auth.session);
+    const denial = assertCompanyScope(auth.session, companyId);
+    if (denial) return denial;
+    if (!companyId) return fail("No company is linked to your account.", 403);
+
+    const body = await readJson(request);
+    const name = cleanString(body.name, 80);
+    const key = cleanString(body.key, 80).toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    if (!name || !key) return fail("Name and key are required.", 400);
+
+    const permissions = permissionsForScope(cleanStringArray(body.permissions, 100, 120), "company");
+    const invalid = permissions.filter((p) => !PERMISSION_KEYS.includes(p));
+    if (invalid.length) return fail(`Unknown permissions: ${invalid.join(", ")}`, 400);
+    const escalation = permissions.filter((p) => !hasPermission(auth.session.permissions, p));
+    if (escalation.length) return fail("You cannot grant permissions you do not hold.", 403);
+
+    const role = await Role.create({
+      name,
+      key,
+      description: cleanString(body.description, 500),
+      scope: "company",
+      scopeId: companyId,
+      permissions,
+      isSystem: false,
+      status: "active",
+      createdBy: auth.session.userId,
+    });
+    return created({ role });
+  } catch (error) {
+    return handleError(error);
+  }
+}

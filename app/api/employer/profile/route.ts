@@ -11,7 +11,7 @@ import { publicUsername } from "@/lib/public-profile";
 export async function PUT(request: NextRequest) {
   try {
     // 1. Only employers can create or update company profiles
-    const auth = authorize(request, ["employer"]);
+    const auth = await authorize(request, ["employer"]);
 
     if (!auth.authorized) {
       return auth.response;
@@ -164,7 +164,7 @@ export async function PUT(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // 1. Verify employer login
-    const auth = authorize(request, ["employer"]);
+    const auth = await authorize(request, ["employer"]);
 
     if (!auth.authorized) {
       return auth.response;

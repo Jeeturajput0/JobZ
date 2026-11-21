@@ -9,7 +9,7 @@ import { isValidProfileImage } from "@/lib/profile-image";
 export async function PUT(request: NextRequest) {
   try {
     // 1. Only logged-in job seekers can update this profile
-    const auth = authorize(request, ["jobSeeker"]);
+    const auth = await authorize(request, ["jobSeeker"]);
 
     if (!auth.authorized) {
       return auth.response;
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // 1. Verify logged-in job seeker
-    const auth = authorize(request, ["jobSeeker"]);
+    const auth = await authorize(request, ["jobSeeker"]);
 
     if (!auth.authorized) {
       return auth.response;

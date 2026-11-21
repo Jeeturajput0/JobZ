@@ -1,5 +1,6 @@
 
 import mongoose, { Schema, Model } from "mongoose";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/constants";
 
 export interface IUser {
   fullName: string;
@@ -7,9 +8,20 @@ export interface IUser {
   email: string;
   password: string;
   phone?: string;
-  role: "jobSeeker" | "employer" | "admin";
+  role: SystemRole;
   status: "active" | "inactive" | "suspended";
   isEmailVerified: boolean;
+  /** Owning company (company admin + company members). */
+  companyId?: mongoose.Types.ObjectId | null;
+  /** Owning counseling team (counseling admin + members). */
+  counselingTeamId?: mongoose.Types.ObjectId | null;
+  /** Custom role scoped to a company/counseling team or the platform. */
+  roleId?: mongoose.Types.ObjectId | null;
+  /** Direct permission grants, additive to the resolved role permissions. */
+  directPermissions: string[];
+  /** Accounts provisioned through an invitation flow. */
+  invitedBy?: mongoose.Types.ObjectId | null;
+  lastActiveAt?: Date | null;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -49,19 +61,58 @@ const UserSchema = new Schema<IUser>(
 
     role: {
       type: String,
-      enum: ["jobSeeker", "employer", "admin"],
+      enum: SYSTEM_ROLES,
       default: "jobSeeker",
+      index: true,
     },
 
     status: {
       type: String,
       enum: ["active", "inactive", "suspended"],
       default: "active",
+      index: true,
     },
 
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+
+    companyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Company",
+      default: null,
+      index: true,
+    },
+
+    counselingTeamId: {
+      type: Schema.Types.ObjectId,
+      ref: "CounselingTeam",
+      default: null,
+      index: true,
+    },
+
+    roleId: {
+      type: Schema.Types.ObjectId,
+      ref: "Role",
+      default: null,
+      index: true,
+    },
+
+    directPermissions: {
+      type: [String],
+      default: [],
+    },
+
+    invitedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    lastActiveAt: {
+      type: Date,
+      default: null,
     },
   },
   {

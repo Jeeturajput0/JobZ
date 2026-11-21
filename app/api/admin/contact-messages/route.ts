@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import ContactMessage from "@/models/ContactMessage";
 
 export async function GET(request: NextRequest) {
-  const auth = authorize(request, ["admin"]);
+  const auth = await authorize(request, ["admin"]);
   if (!auth.authorized) return auth.response;
   try {
     await connectDB();

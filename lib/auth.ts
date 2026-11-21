@@ -1,10 +1,11 @@
 
 import { NextRequest } from "next/server";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/constants";
 
 export interface AuthUser {
   userId: string;
-  role: "jobSeeker" | "employer" | "admin";
+  role: SystemRole;
 }
 
 export function getAuthUser(
@@ -38,7 +39,7 @@ export function getAuthUserFromToken(token?: string): AuthUser | null {
     // 4. Validate token data
     if (
       typeof payload.userId !== "string" ||
-      !["jobSeeker", "employer", "admin"].includes(payload.role)
+      !SYSTEM_ROLES.includes(payload.role)
     ) {
       return null;
     }
@@ -46,7 +47,7 @@ export function getAuthUserFromToken(token?: string): AuthUser | null {
     // 5. Return authenticated user information
     return {
       userId: payload.userId,
-      role: payload.role as AuthUser["role"],
+      role: payload.role as SystemRole,
     };
   } catch {
     return null;

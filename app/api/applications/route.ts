@@ -7,6 +7,10 @@ import Job from "@/models/Job";
 import { authorize } from "@/lib/authorize";
 import { connectDB } from "@/lib/mongodb";
 import { publicJobFilter } from "@/lib/public-jobs";
+import CandidateDocument from "@/models/CandidateDocument";
+import { ensureCompanyForOwner } from "@/lib/company";
+import { evaluateAndStoreAts } from "@/lib/ats-store";
+import { notify } from "@/lib/notify";
 
 type ApplyRequestBody = {
   jobId?: unknown;
@@ -24,7 +28,7 @@ function isDuplicateKeyError(error: unknown): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
 
   if (!auth.authorized) {
     return auth.response;
@@ -104,7 +108,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = authorize(request, ["jobSeeker"]);
+  const auth = await authorize(request, ["jobSeeker"]);
 
   if (!auth.authorized) {
     return auth.response;
@@ -152,19 +156,39 @@ export async function POST(request: NextRequest) {
   const resumeUrl = typeof body.resumeUrl === "string" ? body.resumeUrl.trim() : "";
   const coverLetter = typeof body.coverLetter === "string" ? body.coverLetter.trim() : "";
 
+  // A private document reference is accepted in addition to a normal URL.
+  let privateResume: mongoose.Types.ObjectId | null = null;
   if (resumeUrl) {
-    try {
-      const parsedUrl = new URL(resumeUrl);
-      if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
-        throw new Error("Unsupported URL protocol.");
+    const documentMatch = resumeUrl.match(/^\/api\/candidate\/documents\/([a-f\d]{24})$/i);
+    if (documentMatch) {
+      await connectDB();
+      privateResume = new mongoose.Types.ObjectId(documentMatch[1]);
+      const document = await CandidateDocument.findOne({
+        _id: privateResume,
+        candidateId: auth.user.userId,
+        type: "resume",
+      }).select("_id");
+      if (!document) {
+        return NextResponse.json(
+          { success: false, message: "The selected resume does not belong to you." },
+          { status: 403 },
+        );
       }
-    } catch {
-      return NextResponse.json(
-        { success: false, message: "resumeUrl must be a valid HTTP or HTTPS URL." },
-        { status: 400 },
-      );
+    } else {
+      try {
+        const parsedUrl = new URL(resumeUrl);
+        if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+          throw new Error("Unsupported URL protocol.");
+        }
+      } catch {
+        return NextResponse.json(
+          { success: false, message: "resumeUrl must be a valid HTTP(S) URL or a private resume reference." },
+          { status: 400 },
+        );
+      }
     }
   }
+  void privateResume;
 
   if (coverLetter.length > 10_000) {
     return NextResponse.json(
@@ -179,7 +203,7 @@ export async function POST(request: NextRequest) {
     const job = await Job.findOne({
       _id: new mongoose.Types.ObjectId(body.jobId),
       ...publicJobFilter(),
-    }).select("_id employerId");
+    }).select("_id employerId companyId title");
 
     if (!job) {
       return NextResponse.json(
@@ -201,12 +225,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const company = await ensureCompanyForOwner(String(job.employerId));
     const application = await Application.create({
       jobId: job._id,
       jobSeekerId,
       employerId: job.employerId,
+      companyId: company._id,
+      source: "direct",
+      status: "applied",
       resumeUrl,
       coverLetter,
+      timeline: [{ status: "applied", by: jobSeekerId, at: new Date() }],
+    });
+
+    // ATS is advisory only. A failure here must never block an application.
+    await evaluateAndStoreAts({
+      applicationId: String(application._id),
+      jobId: String(job._id),
+      candidateId: auth.user.userId,
+      companyId: String(company._id),
+    }).catch((error) => console.error("ATS evaluation skipped:", error));
+
+    await notify({
+      userId: String(job.employerId),
+      type: "application.received",
+      title: "New job application",
+      message: `A candidate applied for ${job.title}.`,
+      link: "/employer/applicants",
     });
 
     return NextResponse.json(

@@ -52,7 +52,7 @@ export function PublicJobSeekerProfile({ profile, isOwner }: { profile: Candidat
             {profile.updatedAt && <p className="mt-2 text-xs text-[#849189]">Profile updated {new Date(profile.updatedAt).toLocaleDateString("en", { month: "long", year: "numeric" })}</p>}
           </div>
           <div className="flex flex-wrap gap-2 sm:justify-end">
-            {isOwner && <Link href="/job-seeker/profile" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#DCE8E1] px-3.5 text-sm font-semibold text-[#267653] hover:bg-[#F5FAF7]"><Pencil className="size-4" />Edit profile</Link>}
+            {isOwner && <Link href="/profile/edit" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#DCE8E1] px-3.5 text-sm font-semibold text-[#267653] hover:bg-[#F5FAF7]"><Pencil className="size-4" />Edit profile</Link>}
             {resume && <a href={resume} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#3FA47B] px-3.5 text-sm font-semibold text-white hover:bg-[#267653]"><ArrowDownToLine className="size-4" />Download resume</a>}
           </div>
         </div>

@@ -7,7 +7,7 @@ import Job from "@/models/Job";
 import User from "@/models/User";
 
 export async function GET(request: NextRequest) {
-  const auth = authorize(request, ["admin"]);
+  const auth = await authorize(request, ["admin"]);
   if (!auth.authorized) return auth.response;
 
   const rawPage = request.nextUrl.searchParams.get("page") ?? "1";
