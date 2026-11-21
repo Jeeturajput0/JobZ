@@ -71,6 +71,8 @@ ApplicationSchema.index(
   { unique: true }
 );
 
+ApplicationSchema.index({ employerId: 1, appliedAt: -1 });
+
 const Application: Model<IApplication> =
   mongoose.models.Application ||
   mongoose.model<IApplication>(

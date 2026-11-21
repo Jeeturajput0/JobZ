@@ -5,11 +5,21 @@ import bcrypt from "bcryptjs";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import { publicUsername } from "@/lib/public-profile";
+import { getSetting } from "@/lib/settings";
 
 export async function POST(request: NextRequest) {
   try {
     // 1. Connect to MongoDB
     await connectDB();
+
+    // Respect the super-admin registration toggle.
+    const registrationEnabled = await getSetting<boolean>("platform.registrationEnabled", true);
+    if (!registrationEnabled) {
+      return NextResponse.json(
+        { success: false, message: "Registration is currently disabled." },
+        { status: 403 },
+      );
+    }
 
     // 2. Get data from request body
     const body = await request.json();

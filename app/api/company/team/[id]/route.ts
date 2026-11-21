@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (body.permissions !== undefined) {
       const permissions = permissionsForScope(cleanStringArray(body.permissions, 100, 120), "company");
       const escalation = permissions.filter(
-        (p) => !PERMISSION_KEYS.includes(p) || (!hasPermission(auth.session.permissions, p) && !hasPermission(auth.session.permissions, "company.roles.manage")),
+        (p) => !PERMISSION_KEYS.includes(p) || !hasPermission(auth.session.permissions, p),
       );
       if (escalation.length) return fail("You cannot grant permissions you do not hold.", 403);
       membership.permissions = permissions;
@@ -40,6 +40,8 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         if (!role || role.scope !== "company" || String(role.scopeId) !== String(companyId)) {
           return fail("Invalid role for this company.", 400);
         }
+        const disallowed = role.permissions.filter((p) => !hasPermission(auth.session.permissions, p));
+        if (disallowed.length) return fail("That role contains permissions you do not hold.", 403);
       }
       membership.roleId = roleId;
     }

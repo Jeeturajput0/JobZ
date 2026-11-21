@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
       type: "application.withdrawn",
       title: "Application withdrawn",
       message: "A candidate withdrew their application.",
-      link: "/employer/applicants",
+      link: "/company/applicants",
     });
     await logActivity({
       session: session.session,

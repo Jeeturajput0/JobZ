@@ -1,5 +1,5 @@
 import { MATCH_WEIGHTS_DEFAULT } from "@/lib/constants";
-import { calculateProfileCompletion, type CompletionResult } from "@/lib/profile-completion";
+import type { CompletionResult } from "@/lib/profile-completion";
 import type { IJobSeekerProfile } from "@/models/JobSeekerProfile";
 import type { IJob } from "@/models/Job";
 

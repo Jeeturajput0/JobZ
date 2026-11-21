@@ -15,5 +15,7 @@ const JobSkillSchema = new Schema<IJobSkill>(
 );
 JobSkillSchema.index({ jobId: 1, skillId: 1 }, { unique: true });
 
+JobSkillSchema.index({ skillId: 1, jobId: 1 });
+
 const JobSkill: Model<IJobSkill> = mongoose.models.JobSkill || mongoose.model<IJobSkill>("JobSkill", JobSkillSchema);
 export default JobSkill;

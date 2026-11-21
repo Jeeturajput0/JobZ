@@ -9,7 +9,7 @@ Create `.env.local` in the project root:
 
 ```bash
 MONGODB_URI="mongodb+srv://<user>:<password>@<cluster>/jobz"
-JWT_SECRET="a-long-random-secret"
+JWT_SECRET="<a-long-random-secret-generated-with-openssl-rand-hex-32>"
 ```
 
 Optional (used by `npm run seed:platform` to create the first super admin):
@@ -42,6 +42,36 @@ This is idempotent and seeds:
 - the first super admin (when the `SUPER_ADMIN_*` variables are set).
 
 Then sign in at `/admin/login`. Public self-registration can never create an admin account.
+
+## Development demo data (optional)
+
+A fully interconnected demo dataset (companies, teams, jobs, applications, partnerships,
+hiring requests, recommendations, interviews, placements, notifications and activity logs)
+can be seeded with:
+
+```bash
+npm run seed:demo
+```
+
+The script is development-only: it refuses to run when `NODE_ENV=production` unless
+`ALLOW_DEMO_SEED=true`, and requires explicit confirmation (`--confirm`, already included in
+the npm script). It never deletes collections, never overwrites non-seeded records, and is
+idempotent — run it as often as you like. Every record is marked with `__seed: "jobz-demo-v1"`.
+
+### Demo accounts (development only)
+
+All demo accounts share the password `Demo@12345` (override with `DEMO_PASSWORD` when seeding):
+
+| Role | Email | Dashboard |
+|---|---|---|
+| Super Admin | `demo.superadmin@example.com` | `/admin/dashboard` |
+| Company Owner | `demo.company1@example.com` | `/company/dashboard` |
+| Company HR / Recruiter | `demo.team1@example.com` | `/company/dashboard` |
+| Counseling Admin | `demo.counseling1@example.com` | `/counseling/dashboard` |
+| Counselor | `demo.counselor1@example.com` | `/counseling/dashboard` |
+| Job Seeker | `demo.seeker.aarav@example.com` | `/profile` |
+
+Never use these credentials in a production environment.
 
 ## Dashboards
 

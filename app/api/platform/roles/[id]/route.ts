@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { requirePermission } from "@/lib/session";
 import { ok, fail, handleError, readJson, cleanString, cleanStringArray, requireObjectId } from "@/lib/api";
-import { PERMISSION_KEYS } from "@/lib/constants";
+import { PERMISSION_KEYS, PERMISSION_CATALOG } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
 import Role from "@/models/Role";
 
 interface Ctx { params: Promise<{ id: string }> }
@@ -25,6 +26,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       const permissions = cleanStringArray(body.permissions, 200, 120);
       const invalid = permissions.filter((p) => !PERMISSION_KEYS.includes(p));
       if (invalid.length) return fail(`Unknown permissions: ${invalid.join(", ")}`, 400);
+      const sensitive = permissions.filter((p) => p === "*" || PERMISSION_CATALOG.find((d) => d.key === p)?.sensitive);
+      if (sensitive.length && !hasPermission(auth.session.permissions, "*")) {
+        return fail("You cannot grant sensitive or wildcard permissions.", 403);
+      }
       role.permissions = permissions;
     }
     await role.save();

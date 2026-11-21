@@ -19,11 +19,18 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       .populate({ path: "employerProfileId" }).lean();
     if (!company) return fail("Company not found or not eligible.", 404);
 
-    const [jobs, partnership, hiringRequests] = await Promise.all([
+    const partnership = await Partnership.findOne({
+      companyId: id,
+      counselingTeamId: auth.session.counselingTeamId || "",
+    }).lean();
+    // Only public job data is visible before a partnership exists. Private
+    // hiring requests require an accepted partnership with this organization.
+    const [jobs, hiringRequests] = await Promise.all([
       Job.find({ companyId: id, status: "active", approvalStatus: "approved" })
         .select("title description location jobType workMode experienceLevel skills minSalary maxSalary").sort({ createdAt: -1 }).lean(),
-      Partnership.findOne({ companyId: id, counselingTeamId: auth.session.counselingTeamId || "" }).lean(),
-      HiringRequest.find({ companyId: id }).select("jobTitle status priority numberOfOpenings createdAt").sort({ createdAt: -1 }).limit(20).lean(),
+      partnership?.status === "accepted"
+        ? HiringRequest.find({ companyId: id }).select("jobTitle status priority numberOfOpenings createdAt").sort({ createdAt: -1 }).limit(20).lean()
+        : Promise.resolve([]),
     ]);
     return ok({ company, jobs, partnership, hiringRequests });
   } catch (error) {

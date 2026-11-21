@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/session";
 import { ok, fail, handleError, readJson, cleanString, toObjectId, requireObjectId } from "@/lib/api";
 import { VERIFICATION_STATUSES } from "@/lib/constants";
 import { logActivity, notify } from "@/lib/notify";
+import { getAccessibleCounselingCandidateIds } from "@/lib/counseling";
 import VerificationRequest from "@/models/VerificationRequest";
 import JobSeekerProfile from "@/models/JobSeekerProfile";
 
@@ -15,6 +16,12 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const id = requireObjectId((await ctx.params).id, "verification request id");
     const verification = await VerificationRequest.findById(id);
     if (!verification) return fail("Verification request not found.", 404);
+    if (auth.session.role !== "admin") {
+      const accessible = await getAccessibleCounselingCandidateIds(auth.session);
+      if (accessible === null || !accessible.includes(String(verification.candidateId))) {
+        return fail("Verification request not found.", 404);
+      }
+    }
     const body = await readJson(request);
     const status = String(body.status);
     if (!VERIFICATION_STATUSES.includes(status as never)) return fail("Invalid status.", 400);

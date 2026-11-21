@@ -81,6 +81,9 @@ const EmployerProfileSchema =
     }
   );
 
+EmployerProfileSchema.index({ verificationStatus: 1 });
+EmployerProfileSchema.index({ companyName: 1 });
+
 const EmployerProfile: Model<IEmployerProfile> =
   mongoose.models.EmployerProfile ||
   mongoose.model<IEmployerProfile>(

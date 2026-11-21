@@ -68,6 +68,10 @@ export async function POST(request: NextRequest) {
       if (!companyId) {
         const company = await ensureCompanyForOwner(String(job.employerId));
         companyId = String(company._id);
+      } else if (hiringRequestId) {
+        // The job must belong to the hiring request's company.
+        const jobCompany = await ensureCompanyForOwner(String(job.employerId));
+        if (String(jobCompany._id) !== companyId) return fail("The job does not belong to this hiring request's company.", 400);
       }
     }
     if (!companyId) return fail("A company, hiring request or job is required.", 400);

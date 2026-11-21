@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const requested = permissionsForScope(cleanStringArray(body.permissions, 100, 120), "counseling");
     const escalation = requested.filter(
-      (p) => !PERMISSION_KEYS.includes(p) || (!hasPermission(auth.session.permissions, p) && !hasPermission(auth.session.permissions, "counseling.team.manage")),
+      (p) => !PERMISSION_KEYS.includes(p) || (!hasPermission(auth.session.permissions, p)),
     );
     if (escalation.length) return fail("You cannot grant permissions you do not hold.", 403);
 

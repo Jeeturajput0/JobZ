@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requirePermission } from "@/lib/session";
 import { ok, handleError, parsePagination } from "@/lib/api";
+import { getAccessibleCounselingCandidateIds } from "@/lib/counseling";
 import VerificationRequest from "@/models/VerificationRequest";
 
 export async function GET(request: NextRequest) {
@@ -13,6 +14,10 @@ export async function GET(request: NextRequest) {
     if (sp.get("status")) query.status = sp.get("status");
     if (sp.get("category")) query.category = sp.get("category");
     if (!sp.get("all")) query.status = { $in: ["pendingReview", "underReview", "additionalInfoRequired"] };
+    if (auth.session.role !== "admin") {
+      const accessible = await getAccessibleCounselingCandidateIds(auth.session);
+      query.candidateId = { $in: accessible === null ? [] : accessible };
+    }
     const [requests, total] = await Promise.all([
       VerificationRequest.find(query)
         .populate({ path: "candidateId", select: "fullName email" })

@@ -10,7 +10,6 @@ import SavedJob from "@/models/SavedJob";
 import Job from "@/models/Job";
 import EmployerProfile from "@/models/EmployerProfile";
 import Interview from "@/models/Interview";
-import CandidateRecommendation from "@/models/CandidateRecommendation";
 import CounselingRecord from "@/models/CounselingRecord";
 import CounselingTeam from "@/models/CounselingTeam";
 import Notification from "@/models/Notification";
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const uid = new mongoose.Types.ObjectId(userId);
 
-    const [profile, user, weights, matchWeights, applications, saved, recentJobs, interviews, recommendations, counseling, unread] = await Promise.all([
+    const [profile, user, weights, matchWeights, applications, saved, recentJobs, interviews, counseling, unread] = await Promise.all([
       JobSeekerProfile.findOne({ userId: uid }).lean(),
       User.findById(uid).select("fullName email").lean(),
       getCompletionWeights(),
@@ -43,10 +42,6 @@ export async function GET(request: NextRequest) {
         .populate({ path: "jobId", select: "title" })
         .populate({ path: "companyId", select: "name" })
         .sort({ scheduledAt: 1 }).lean(),
-      CandidateRecommendation.find({ candidateId: uid })
-        .populate({ path: "companyId", select: "name" })
-        .populate({ path: "jobId", select: "title" })
-        .sort({ createdAt: -1 }).lean(),
       CounselingRecord.find({ candidateId: uid })
         .populate({ path: "teamId", select: "name" })
         .populate({ path: "assignedTo", select: "fullName email" }).lean(),

@@ -31,11 +31,17 @@ export async function getSession(request: NextRequest): Promise<Session | null> 
   if (!user) return null;
   if ((user as { status?: string }).status !== "active") return null;
 
-  // A suspended company cannot act through any of its member accounts.
+  // A suspended company or counseling organization cannot act through its
+  // member accounts.
   if (user.companyId && (["employer", "companyMember"] as string[]).includes(String(user.role))) {
     const { default: Company } = await import("@/models/Company");
     const company = await Company.findById(user.companyId).select("status").lean();
     if (!company || company.status !== "active") return null;
+  }
+  if (user.counselingTeamId && (["counselingAdmin", "counselingMember"] as string[]).includes(String(user.role))) {
+    const { default: CounselingTeam } = await import("@/models/CounselingTeam");
+    const team = await CounselingTeam.findById(user.counselingTeamId).select("status").lean();
+    if (!team || team.status !== "active") return null;
   }
 
   // Use the current database role, not the (possibly stale) JWT role, so a

@@ -463,7 +463,7 @@ function InterviewsSection() {
   const [refresh, setRefresh] = useState(0);
   const res = usePaged<Row>(`/api/company/interviews?period=${period}`, "interviews", [period, refresh]);
   const [members, setMembers] = useState<Row[]>([]);
-  useEffect(() => { fetch("/api/company/team/members", { cache: "no-store" }).then((r) => r.json()).then((d) => setMembers(Array.isArray(d.members) ? d.members : [])).catch(() => undefined); }, []);
+  useEffect(() => { fetch("/api/company/team", { cache: "no-store" }).then((r) => r.json()).then((d) => setMembers(Array.isArray(d.members) ? d.members : [])).catch(() => undefined); }, []);
   return <>
     <PageHeader title="Interviews" subtitle="Schedule, reschedule and track interviews." action={<select value={period} onChange={(e) => setPeriod(e.target.value)} className="rounded-lg border border-[#E5ECE8] px-3 py-2 text-xs"><option value="">All</option><option value="upcoming">Upcoming</option><option value="past">Past</option></select>} />
     <Panel title={`Interviews (${res.total})`}>

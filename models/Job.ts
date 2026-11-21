@@ -159,6 +159,11 @@ const JobSchema = new Schema<IJob>(
   }
 );
 
+JobSchema.index({ status: 1, approvalStatus: 1, createdAt: -1 });
+JobSchema.index({ companyId: 1 });
+JobSchema.index({ employerId: 1 });
+JobSchema.index({ category: 1 });
+
 const Job: Model<IJob> =
   mongoose.models.Job ||
   mongoose.model<IJob>("Job", JobSchema);

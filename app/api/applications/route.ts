@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
       type: "application.received",
       title: "New job application",
       message: `A candidate applied for ${job.title}.`,
-      link: "/employer/applicants",
+      link: "/company/applicants",
     });
 
     return NextResponse.json(

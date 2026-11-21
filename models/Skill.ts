@@ -19,5 +19,7 @@ const SkillSchema = new Schema<ISkill>(
   { timestamps: true },
 );
 
+SkillSchema.index({ category: 1, name: 1 });
+
 const Skill: Model<ISkill> = mongoose.models.Skill || mongoose.model<ISkill>("Skill", SkillSchema);
 export default Skill;

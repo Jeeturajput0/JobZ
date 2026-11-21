@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { requirePermission, assertCompanyScope } from "@/lib/session";
 import { ok, handleError } from "@/lib/api";
 import { resolveCompanyId } from "@/lib/company";
-import { getCompanyJobFilter } from "@/lib/company";
 import Application from "@/models/Application";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 

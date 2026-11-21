@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         type: "job.approval",
         title: "Job review updated",
         message: `Your job "${job.title}" was ${body.approvalStatus}.`,
-        link: "/employer/manage-jobs",
+        link: "/company/jobs",
       });
     }
     return ok({ job });

@@ -67,6 +67,9 @@ const CompanySchema = new Schema<ICompany>(
   { timestamps: true },
 );
 
+// One company per owner — ensureCompanyForOwner assumes this invariant.
+CompanySchema.index({ ownerId: 1 }, { unique: true });
+
 const Company: Model<ICompany> =
   mongoose.models.Company || mongoose.model<ICompany>("Company", CompanySchema);
 

@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         type: "company.verification",
         title: "Company verification updated",
         message: `Your company verification status is now ${status}.${body.reason ? ` Reason: ${String(body.reason)}` : ""}`,
-        link: "/employer/company-profile",
+        link: "/company/profile",
       });
     }
     if (body.status !== undefined && ["active", "suspended"].includes(String(body.status))) {

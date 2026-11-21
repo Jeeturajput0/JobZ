@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { requireSession } from "@/lib/session";
 import { ok, handleError, parsePagination } from "@/lib/api";
 import Notification from "@/models/Notification";

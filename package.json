@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "migrate:skills": "node scripts/migrate-skills.mjs",
-    "seed:platform": "node scripts/seed-platform.mjs"
+    "seed:platform": "node scripts/seed-platform.mjs",
+    "seed:demo": "node scripts/seed-demo.mjs --confirm"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

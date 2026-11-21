@@ -15,9 +15,6 @@ import CounselingTeam from "@/models/CounselingTeam";
 import ActivityLog from "@/models/ActivityLog";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 
-const createdAtOf = (value: unknown): Date | undefined =>
-  (value as { createdAt?: Date } | null)?.createdAt;
-
 export async function GET(request: NextRequest) {
   try {
     const auth = await requirePermission(request, ["company.dashboard.view", "company.analytics.view"]);

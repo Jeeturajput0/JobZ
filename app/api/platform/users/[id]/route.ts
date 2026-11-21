@@ -18,10 +18,11 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (!user) return fail("User not found.", 404);
 
     // Never let anyone elevate themselves or create a super admin through this API.
-    if (String(user._id) === auth.session.userId && body.role && body.role !== user.role) {
-      return fail("You cannot change your own role.", 403);
+    const isSelf = String(user._id) === auth.session.userId;
+    if (isSelf && (body.role !== undefined || body.roleId !== undefined || body.directPermissions !== undefined)) {
+      return fail("You cannot change your own role or permissions.", 403);
     }
-    if (body.role === "admin" && !hasPermission(auth.session.permissions, "platform.users.manage")) {
+    if (body.role === "admin" && !hasPermission(auth.session.permissions, "*")) {
       return fail("You cannot grant super admin access.", 403);
     }
 
@@ -40,8 +41,8 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       const permissions = cleanStringArray(body.directPermissions, 200, 120);
       const invalid = permissions.filter((p) => !PERMISSION_KEYS.includes(p) && p !== "*");
       if (invalid.length) return fail(`Unknown permissions: ${invalid.join(", ")}`, 400);
-      if (permissions.includes("*") && !hasPermission(auth.session.permissions, "platform.users.manage")) {
-        return fail("Cannot grant wildcard access.", 403);
+      if ((permissions.includes("*") || permissions.some((p) => p.startsWith("platform."))) && !hasPermission(auth.session.permissions, "*")) {
+        return fail("Cannot grant platform-level or wildcard access.", 403);
       }
       user.directPermissions = permissions;
     }

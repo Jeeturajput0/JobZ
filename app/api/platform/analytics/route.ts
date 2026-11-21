@@ -5,7 +5,6 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import Job from "@/models/Job";
 import Application from "@/models/Application";
-import Company from "@/models/Company";
 import CounselingTeam from "@/models/CounselingTeam";
 import VerificationRequest from "@/models/VerificationRequest";
 import HiringRequest from "@/models/HiringRequest";

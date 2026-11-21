@@ -15,5 +15,7 @@ const UserSkillSchema = new Schema<IUserSkill>(
 );
 UserSkillSchema.index({ userId: 1, skillId: 1 }, { unique: true });
 
+UserSkillSchema.index({ skillId: 1, userId: 1 });
+
 const UserSkill: Model<IUserSkill> = mongoose.models.UserSkill || mongoose.model<IUserSkill>("UserSkill", UserSkillSchema);
 export default UserSkill;

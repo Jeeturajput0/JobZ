@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { requirePermission } from "@/lib/session";
 import { ok, handleError, parsePagination } from "@/lib/api";
 import Company from "@/models/Company";
-import EmployerProfile from "@/models/EmployerProfile";
 import Job from "@/models/Job";
 import Partnership from "@/models/Partnership";
 

@@ -4,6 +4,7 @@ import { ok, created, fail, handleError, readJson, cleanString, toObjectId, isOb
 import { resolveCompanyId } from "@/lib/company";
 import { logActivity, notify } from "@/lib/notify";
 import Job from "@/models/Job";
+import Company from "@/models/Company";
 import Interview from "@/models/Interview";
 import Application from "@/models/Application";
 
@@ -48,9 +49,12 @@ export async function POST(request: NextRequest) {
 
     const job = await Job.findById(jobId);
     if (!job) return fail("Job not found.", 404);
-    if (String(job.employerId) !== auth.session.userId && String(job.companyId) !== companyId) {
-      return fail("You cannot schedule interviews for this job.", 403);
-    }
+    // Job.companyId holds an EmployerProfile id, so resolve the company's
+    // profile id before comparing (a Company id will never match it).
+    const company = await Company.findById(companyId).select("employerProfileId").lean();
+    const profileId = company?.employerProfileId ? String(company.employerProfileId) : "";
+    const ownsJob = String(job.employerId) === auth.session.userId || (Boolean(profileId) && String(job.companyId) === profileId);
+    if (!ownsJob) return fail("You cannot schedule interviews for this job.", 403);
 
     const scheduledAt = new Date(String(body.scheduledAt));
     if (Number.isNaN(scheduledAt.getTime())) return fail("A valid interview date is required.", 400);

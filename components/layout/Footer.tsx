@@ -20,8 +20,8 @@ const groups = [
     title: "For Employers",
     description: "Find the right talent for your team.",
     links: [
-      ["Post a Job", "/employer/post-job"],
-      ["Manage Job Listings", "/employer/dashboard"],
+      ["Post a Job", "/company/jobs/new"],
+      ["Manage Job Listings", "/company/jobs"],
       ["Employer Login", "/login"],
       ["Contact Our Team", "/contact"],
     ],
@@ -98,7 +98,7 @@ export function Footer() {
 
           <p className="mt-3 max-w-[240px] text-sm leading-6 text-[#475569]">
             Your next opportunity starts here. Discover jobs, connect with
-            great companies, and build a career you're proud of.
+            great companies, and build a career you&apos;re proud of.
           </p>
 
           {socials.length > 0 && (

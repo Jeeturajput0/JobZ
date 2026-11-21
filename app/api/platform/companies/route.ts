@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { requirePermission } from "@/lib/session";
-import { ok, created, fail, handleError, readJson, parsePagination, cleanString, toObjectId } from "@/lib/api";
+import { ok, created, fail, handleError, readJson, parsePagination, cleanString } from "@/lib/api";
 import { logActivity } from "@/lib/notify";
 import { publicUsername } from "@/lib/public-profile";
 import Company from "@/models/Company";

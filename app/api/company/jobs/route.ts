@@ -80,8 +80,9 @@ export async function POST(request: NextRequest) {
     data.title = `${String(data.title || "Job")} (Copy)`;
     data.status = "draft";
     data.approvalStatus = "pending";
+    // Job.companyId stores an EmployerProfile id (legacy convention), not a
+    // Company id. Keep the source job's profile reference intact.
     data.employerId = toObjectId(auth.session.userId);
-    data.companyId = toObjectId(companyId);
     const job = await Job.create(data);
     await logActivity({ session: auth.session, action: "job.duplicated", entity: "Job", entityId: String(job._id), description: `Duplicated job ${source.title}.` });
     return created({ job });

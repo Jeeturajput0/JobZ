@@ -3,6 +3,7 @@ import { getSession, forbidden, unauthorized } from "@/lib/session";
 import { ok, fail, handleError, requireObjectId } from "@/lib/api";
 import { hasPermission } from "@/lib/permissions";
 import { getCompanyCandidateIds } from "@/lib/company";
+import { getAccessibleCounselingCandidateIds } from "@/lib/counseling";
 import { evaluateAndStoreAts } from "@/lib/ats-store";
 import { logActivity } from "@/lib/notify";
 import Application from "@/models/Application";
@@ -25,7 +26,10 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       allowed = accessible.includes(candidateId) && hasPermission(session.permissions, "company.ats.view");
     }
     if (!allowed && ["counselingAdmin", "counselingMember"].includes(session.role)) {
-      allowed = hasPermission(session.permissions, "counseling.assessments.viewResults");
+      const accessible = await getAccessibleCounselingCandidateIds(session);
+      allowed =
+        hasPermission(session.permissions, "counseling.assessments.viewResults") &&
+        (accessible === null ? false : accessible.includes(candidateId));
     }
     if (!allowed) return forbidden("You are not authorised to view this ATS evaluation.");
 
@@ -46,8 +50,12 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
     const companyAllowed = ["employer", "companyMember"].includes(session.role) && session.companyId &&
       String(application.companyId || "") === session.companyId && hasPermission(session.permissions, "company.ats.view");
-    const adminAllowed = session.role === "admin" || (["counselingAdmin", "counselingMember"].includes(session.role) && hasPermission(session.permissions, "counseling.assessments.manage"));
-    if (!companyAllowed && !adminAllowed) return forbidden();
+    let counselingAllowed = false;
+    if (["counselingAdmin", "counselingMember"].includes(session.role) && hasPermission(session.permissions, "counseling.assessments.manage")) {
+      const accessible = await getAccessibleCounselingCandidateIds(session);
+      counselingAllowed = accessible !== null && accessible.includes(String(application.jobSeekerId));
+    }
+    if (!companyAllowed && session.role !== "admin" && !counselingAllowed) return forbidden();
 
     const evaluation = await evaluateAndStoreAts({
       applicationId: id,

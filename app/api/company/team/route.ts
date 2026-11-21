@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { requirePermission, assertCompanyScope } from "@/lib/session";
-import { ok, created, fail, handleError, readJson, cleanString, cleanStringArray, isObjectId, toObjectId } from "@/lib/api";
+import { ok, created, fail, handleError, readJson, cleanString, cleanStringArray, toObjectId } from "@/lib/api";
 import { hasPermission, permissionsForScope } from "@/lib/permissions";
 import { PERMISSION_KEYS, ROLE_LABELS } from "@/lib/constants";
 import { resolveCompanyId } from "@/lib/company";
@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
 
     // A company admin may only grant permissions they themselves hold, and
     // only permissions that belong to the company scope.
-    let permissions = permissionsForScope(cleanStringArray(body.permissions, 100, 120), "company");
+    const permissions = permissionsForScope(cleanStringArray(body.permissions, 100, 120), "company");
     const escalation = permissions.filter(
-      (p) => !PERMISSION_KEYS.includes(p) || (!hasPermission(auth.session.permissions, p) && !hasPermission(auth.session.permissions, "company.roles.manage")),
+      (p) => !PERMISSION_KEYS.includes(p) || (!hasPermission(auth.session.permissions, p)),
     );
     if (escalation.length) return fail("You cannot grant permissions you do not hold.", 403);
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       }
       // Custom role permissions are also bounded by the admin's own grants.
       const disallowed = role.permissions.filter(
-        (p) => !hasPermission(auth.session.permissions, p) && !hasPermission(auth.session.permissions, "company.roles.manage"),
+        (p) => !hasPermission(auth.session.permissions, p),
       );
       if (disallowed.length) return fail("The selected role contains permissions you cannot grant.", 403);
     }
